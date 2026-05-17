@@ -1,0 +1,50 @@
+import type { CreateInterviewContextDto, LlmProvider, SuggestedAnswerPayload } from '../interview/interview.types';
+type GenerateInput = {
+    context: CreateInterviewContextDto;
+    detectedQuestion: string;
+    transcriptWindow: string;
+    provider?: LlmProvider;
+    model?: string;
+};
+export declare class AiService {
+    private readonly logger;
+    private readonly defaultProvider;
+    private readonly geminiApiKey;
+    private readonly geminiModel;
+    private readonly openAiApiKey;
+    private readonly openAiBaseUrl;
+    private readonly openAiModel;
+    private readonly ollamaApiKey;
+    private readonly ollamaBaseUrl;
+    private readonly ollamaModel;
+    private readonly whisperBaseUrl;
+    private readonly whisperModel;
+    private readonly whisperApiKey;
+    private readonly maxResumeChars;
+    private readonly maxJobDescriptionChars;
+    private readonly maxCompanySegmentChars;
+    private readonly maxQuestionChars;
+    private readonly maxTranscriptChars;
+    private readonly maxAiBehaviorChars;
+    private readonly llmTimeoutMs;
+    transcribeLiveChunk(input: {
+        transcript?: string;
+        audioBase64?: string;
+        mimeType?: string;
+    }): Promise<string>;
+    generateSuggestedAnswer(input: GenerateInput): Promise<SuggestedAnswerPayload>;
+    private generateWithGemini;
+    private generateWithOpenAi;
+    private generateWithOllama;
+    private generateWithOpenAiCompatible;
+    private buildPrompt;
+    private resolveProvider;
+    private resolveModel;
+    private getAllowedModels;
+    private extractGeminiText;
+    private parseSuggestedAnswer;
+    private extractFirstJsonObject;
+    private truncate;
+    private compactText;
+}
+export {};

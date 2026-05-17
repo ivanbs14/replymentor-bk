@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  ACTIVE
+  CLOSED
+}
+
+model InterviewContext {
+  id                 String             @id @default(cuid())
+  resumeText         String
+  interviewType      String
+  jobLevel           String
+  jobDescription     String
+  companyName        String
+  companySegment     String?
+  responsePreference String
+  aiBehavior         String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  sessions           InterviewSession[]
+}
+
+model InterviewSession {
+  id                String              @id @default(cuid())
+  status            SessionStatus       @default(ACTIVE)
+  startedAt         DateTime            @default(now())
+  endedAt           DateTime?
+  contextId         String
+  context           InterviewContext    @relation(fields: [contextId], references: [id], onDelete: Cascade)
+  transcripts       TranscriptChunk[]
+  suggestedResponse SuggestedResponse[]
+  summary           SessionSummary?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model TranscriptChunk {
+  id        String           @id @default(cuid())
+  sessionId String
+  session   InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sequence  Int
+  content   String
+  source    String           @default("stt")
+  createdAt DateTime         @default(now())
+
+  @@unique([sessionId, sequence])
+}
+
+model SuggestedResponse {
+  id              String           @id @default(cuid())
+  sessionId       String
+  session         InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  detectedQuestion String
+  suggestedAnswer String
+  shortVersion    String
+  keyPoints       String[]
+  strategicNote   String
+  createdAt       DateTime         @default(now())
+}
+
+model SessionSummary {
+  id         String           @id @default(cuid())
+  sessionId  String           @unique
+  session    InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  content    String
+  topics     String[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
