@@ -1,6 +1,20 @@
 import { PrismaClient } from '@prisma/client';
+import { randomBytes, scrypt as scryptCallback } from 'node:crypto';
+import { promisify } from 'node:util';
 
 const prisma = new PrismaClient();
+const scrypt = promisify(scryptCallback);
+const KEY_LENGTH = 64;
+const seededUser = {
+  email: 'demo@replymentor.app',
+  password: 'ReplyMentor@123',
+};
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString('hex');
+  const derivedKey = (await scrypt(password, salt, KEY_LENGTH)) as Buffer;
+  return `${salt}:${derivedKey.toString('hex')}`;
+}
 
 const resumeText = `
 Ivan Barbosa da Silva - Full Stack (Fortaleza/CE)
@@ -53,8 +67,21 @@ Sugestao de stack/arquitetura considerada aderente:
 `.trim();
 
 async function main() {
+  const passwordHash = await hashPassword(seededUser.password);
+  const user = await prisma.user.upsert({
+    where: { email: seededUser.email },
+    update: {
+      passwordHash,
+    },
+    create: {
+      email: seededUser.email,
+      passwordHash,
+    },
+  });
+
   const context = await prisma.interviewContext.create({
     data: {
+      userId: user.id,
       resumeText,
       interviewType: 'Técnica (Coding/System Design)',
       jobLevel: 'Sênior',
@@ -69,6 +96,9 @@ async function main() {
   });
 
   console.log('InterviewContext seeded with id:', context.id);
+  console.log('Seeded login credentials:');
+  console.log(`  email: ${seededUser.email}`);
+  console.log(`  password: ${seededUser.password}`);
 }
 
 main()

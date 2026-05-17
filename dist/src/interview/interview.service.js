@@ -22,11 +22,17 @@ let InterviewService = class InterviewService {
         this.prisma = prisma;
         this.ai = ai;
     }
-    async createContext(payload) {
-        return this.prisma.interviewContext.create({ data: payload });
+    async createContext(userId, payload) {
+        return this.prisma.interviewContext.create({
+            data: {
+                ...payload,
+                userId,
+            },
+        });
     }
-    async getLatestContext() {
+    async getLatestContext(userId) {
         const context = await this.prisma.interviewContext.findFirst({
+            where: { userId },
             orderBy: { createdAt: 'desc' },
         });
         if (!context) {
@@ -34,22 +40,63 @@ let InterviewService = class InterviewService {
         }
         return context;
     }
-    async startSession(payload) {
+    async listContexts(userId) {
+        const contexts = await this.prisma.interviewContext.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                sessions: {
+                    orderBy: { createdAt: 'desc' },
+                    select: {
+                        id: true,
+                        status: true,
+                        startedAt: true,
+                        endedAt: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
+        return contexts.map((context) => ({
+            id: context.id,
+            resumeText: context.resumeText,
+            interviewType: context.interviewType,
+            jobLevel: context.jobLevel,
+            jobDescription: context.jobDescription,
+            companyName: context.companyName,
+            companySegment: context.companySegment,
+            responsePreference: context.responsePreference,
+            aiBehavior: context.aiBehavior,
+            createdAt: context.createdAt,
+            updatedAt: context.updatedAt,
+            sessionsCount: context.sessions.length,
+            latestSessionAt: context.sessions[0]?.createdAt ?? null,
+            latestSessionStatus: context.sessions[0]?.status ?? null,
+        }));
+    }
+    async startSession(userId, payload) {
         const context = await this.prisma.interviewContext.findUnique({
             where: { id: payload.contextId },
         });
         if (!context) {
             throw new common_1.NotFoundException('Contexto de entrevista não encontrado.');
         }
+        if (context.userId !== userId) {
+            throw new common_1.NotFoundException('Contexto de entrevista não encontrado.');
+        }
         return this.prisma.interviewSession.create({
             data: { contextId: payload.contextId, status: client_1.SessionStatus.ACTIVE },
         });
     }
-    async addTranscript(sessionId, payload) {
+    async addTranscript(userId, sessionId, payload) {
         const session = await this.prisma.interviewSession.findUnique({
             where: { id: sessionId },
+            include: { context: true },
         });
         if (!session) {
+            throw new common_1.NotFoundException('Sessão não encontrada.');
+        }
+        if (session.context.userId !== userId) {
             throw new common_1.NotFoundException('Sessão não encontrada.');
         }
         if (session.status !== client_1.SessionStatus.ACTIVE) {
@@ -60,7 +107,9 @@ let InterviewService = class InterviewService {
             audioBase64: payload.audioBase64,
             mimeType: payload.mimeType,
         });
-        const count = await this.prisma.transcriptChunk.count({ where: { sessionId } });
+        const count = await this.prisma.transcriptChunk.count({
+            where: { sessionId },
+        });
         return this.prisma.transcriptChunk.create({
             data: {
                 sessionId,
@@ -70,12 +119,15 @@ let InterviewService = class InterviewService {
             },
         });
     }
-    async generateResponse(sessionId, payload) {
+    async generateResponse(userId, sessionId, payload) {
         const session = await this.prisma.interviewSession.findUnique({
             where: { id: sessionId },
             include: { context: true },
         });
         if (!session) {
+            throw new common_1.NotFoundException('Sessão não encontrada.');
+        }
+        if (session.context.userId !== userId) {
             throw new common_1.NotFoundException('Sessão não encontrada.');
         }
         const latestChunks = await this.prisma.transcriptChunk.findMany({
@@ -127,11 +179,15 @@ let InterviewService = class InterviewService {
             createdAt: saved.createdAt,
         };
     }
-    async endSession(sessionId) {
+    async endSession(userId, sessionId) {
         const session = await this.prisma.interviewSession.findUnique({
             where: { id: sessionId },
+            include: { context: true },
         });
         if (!session) {
+            throw new common_1.NotFoundException('Sessão não encontrada.');
+        }
+        if (session.context.userId !== userId) {
             throw new common_1.NotFoundException('Sessão não encontrada.');
         }
         const responses = await this.prisma.suggestedResponse.findMany({
@@ -152,7 +208,14 @@ let InterviewService = class InterviewService {
             create: { sessionId, content, topics },
         });
     }
-    async getSummary(sessionId) {
+    async getSummary(userId, sessionId) {
+        const session = await this.prisma.interviewSession.findUnique({
+            where: { id: sessionId },
+            include: { context: true },
+        });
+        if (!session || session.context.userId !== userId) {
+            throw new common_1.NotFoundException('Resumo da sessão não encontrado.');
+        }
         const summary = await this.prisma.sessionSummary.findUnique({
             where: { sessionId },
         });

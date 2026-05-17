@@ -6,7 +6,35 @@ export declare class InterviewService {
     private readonly ai;
     private readonly maxChunksForGeneration;
     constructor(prisma: PrismaService, ai: AiService);
-    createContext(payload: CreateInterviewContextDto): Promise<{
+    createContext(userId: string, payload: CreateInterviewContextDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        resumeText: string;
+        interviewType: string;
+        jobLevel: string;
+        jobDescription: string;
+        companyName: string;
+        companySegment: string | null;
+        responsePreference: string;
+        aiBehavior: string | null;
+        userId: string;
+    }>;
+    getLatestContext(userId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        resumeText: string;
+        interviewType: string;
+        jobLevel: string;
+        jobDescription: string;
+        companyName: string;
+        companySegment: string | null;
+        responsePreference: string;
+        aiBehavior: string | null;
+        userId: string;
+    }>;
+    listContexts(userId: string): Promise<{
         id: string;
         resumeText: string;
         interviewType: string;
@@ -15,24 +43,14 @@ export declare class InterviewService {
         companyName: string;
         companySegment: string | null;
         responsePreference: string;
+        aiBehavior: string | null;
         createdAt: Date;
         updatedAt: Date;
-        aiBehavior: string | null;
-    }>;
-    getLatestContext(): Promise<{
-        id: string;
-        resumeText: string;
-        interviewType: string;
-        jobLevel: string;
-        jobDescription: string;
-        companyName: string;
-        companySegment: string | null;
-        responsePreference: string;
-        createdAt: Date;
-        updatedAt: Date;
-        aiBehavior: string | null;
-    }>;
-    startSession(payload: StartSessionDto): Promise<{
+        sessionsCount: number;
+        latestSessionAt: Date;
+        latestSessionStatus: import(".prisma/client").$Enums.SessionStatus;
+    }[]>;
+    startSession(userId: string, payload: StartSessionDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -41,7 +59,7 @@ export declare class InterviewService {
         endedAt: Date | null;
         contextId: string;
     }>;
-    addTranscript(sessionId: string, payload: AddTranscriptDto): Promise<{
+    addTranscript(userId: string, sessionId: string, payload: AddTranscriptDto): Promise<{
         id: string;
         createdAt: Date;
         sessionId: string;
@@ -49,7 +67,7 @@ export declare class InterviewService {
         content: string;
         source: string;
     }>;
-    generateResponse(sessionId: string, payload: GenerateResponseDto): Promise<{
+    generateResponse(userId: string, sessionId: string, payload: GenerateResponseDto): Promise<{
         id: string;
         detectedQuestion: string;
         suggestedAnswer: string;
@@ -58,7 +76,7 @@ export declare class InterviewService {
         strategicNote: string;
         createdAt: Date;
     }>;
-    endSession(sessionId: string): Promise<{
+    endSession(userId: string, sessionId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -66,7 +84,7 @@ export declare class InterviewService {
         content: string;
         topics: string[];
     }>;
-    getSummary(sessionId: string): Promise<{
+    getSummary(userId: string, sessionId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

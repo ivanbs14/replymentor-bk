@@ -1,9 +1,44 @@
+import type { Request } from 'express';
 import { InterviewService } from './interview.service';
 import type { AddTranscriptDto, CreateInterviewContextDto, GenerateResponseDto, StartSessionDto } from './interview.types';
+type AuthenticatedRequest = Request & {
+    user: {
+        userId: string;
+        email: string;
+    };
+};
 export declare class InterviewController {
     private readonly interviewService;
     constructor(interviewService: InterviewService);
-    createContext(payload: CreateInterviewContextDto): Promise<{
+    createContext(request: AuthenticatedRequest, payload: CreateInterviewContextDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        resumeText: string;
+        interviewType: string;
+        jobLevel: string;
+        jobDescription: string;
+        companyName: string;
+        companySegment: string | null;
+        responsePreference: string;
+        aiBehavior: string | null;
+        userId: string;
+    }>;
+    getLatestContext(request: AuthenticatedRequest): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        resumeText: string;
+        interviewType: string;
+        jobLevel: string;
+        jobDescription: string;
+        companyName: string;
+        companySegment: string | null;
+        responsePreference: string;
+        aiBehavior: string | null;
+        userId: string;
+    }>;
+    listContexts(request: AuthenticatedRequest): Promise<{
         id: string;
         resumeText: string;
         interviewType: string;
@@ -12,24 +47,14 @@ export declare class InterviewController {
         companyName: string;
         companySegment: string | null;
         responsePreference: string;
+        aiBehavior: string | null;
         createdAt: Date;
         updatedAt: Date;
-        aiBehavior: string | null;
-    }>;
-    getLatestContext(): Promise<{
-        id: string;
-        resumeText: string;
-        interviewType: string;
-        jobLevel: string;
-        jobDescription: string;
-        companyName: string;
-        companySegment: string | null;
-        responsePreference: string;
-        createdAt: Date;
-        updatedAt: Date;
-        aiBehavior: string | null;
-    }>;
-    startSession(payload: StartSessionDto): Promise<{
+        sessionsCount: number;
+        latestSessionAt: Date;
+        latestSessionStatus: import(".prisma/client").$Enums.SessionStatus;
+    }[]>;
+    startSession(request: AuthenticatedRequest, payload: StartSessionDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -38,7 +63,7 @@ export declare class InterviewController {
         endedAt: Date | null;
         contextId: string;
     }>;
-    addTranscript(sessionId: string, payload: AddTranscriptDto): Promise<{
+    addTranscript(request: AuthenticatedRequest, sessionId: string, payload: AddTranscriptDto): Promise<{
         id: string;
         createdAt: Date;
         sessionId: string;
@@ -46,7 +71,7 @@ export declare class InterviewController {
         content: string;
         source: string;
     }>;
-    generateResponse(sessionId: string, payload: GenerateResponseDto): Promise<{
+    generateResponse(request: AuthenticatedRequest, sessionId: string, payload: GenerateResponseDto): Promise<{
         id: string;
         detectedQuestion: string;
         suggestedAnswer: string;
@@ -55,7 +80,7 @@ export declare class InterviewController {
         strategicNote: string;
         createdAt: Date;
     }>;
-    endSession(sessionId: string): Promise<{
+    endSession(request: AuthenticatedRequest, sessionId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -63,7 +88,7 @@ export declare class InterviewController {
         content: string;
         topics: string[];
     }>;
-    getSummary(sessionId: string): Promise<{
+    getSummary(request: AuthenticatedRequest, sessionId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -72,3 +97,4 @@ export declare class InterviewController {
         topics: string[];
     }>;
 }
+export {};

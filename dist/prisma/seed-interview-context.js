@@ -1,7 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
+const node_crypto_1 = require("node:crypto");
+const node_util_1 = require("node:util");
 const prisma = new client_1.PrismaClient();
+const scrypt = (0, node_util_1.promisify)(node_crypto_1.scrypt);
+const KEY_LENGTH = 64;
+const seededUser = {
+    email: 'demo@replymentor.app',
+    password: 'ReplyMentor@123',
+};
+async function hashPassword(password) {
+    const salt = (0, node_crypto_1.randomBytes)(16).toString('hex');
+    const derivedKey = (await scrypt(password, salt, KEY_LENGTH));
+    return `${salt}:${derivedKey.toString('hex')}`;
+}
 const resumeText = `
 Ivan Barbosa da Silva - Full Stack (Fortaleza/CE)
 
@@ -51,8 +64,20 @@ Sugestao de stack/arquitetura considerada aderente:
 - Estrategia: monolito modular por dominio no inicio, com possibilidade de extracao de servicos no crescimento
 `.trim();
 async function main() {
+    const passwordHash = await hashPassword(seededUser.password);
+    const user = await prisma.user.upsert({
+        where: { email: seededUser.email },
+        update: {
+            passwordHash,
+        },
+        create: {
+            email: seededUser.email,
+            passwordHash,
+        },
+    });
     const context = await prisma.interviewContext.create({
         data: {
+            userId: user.id,
             resumeText,
             interviewType: 'Técnica (Coding/System Design)',
             jobLevel: 'Sênior',
@@ -64,6 +89,9 @@ async function main() {
         },
     });
     console.log('InterviewContext seeded with id:', context.id);
+    console.log('Seeded login credentials:');
+    console.log(`  email: ${seededUser.email}`);
+    console.log(`  password: ${seededUser.password}`);
 }
 main()
     .catch((error) => {

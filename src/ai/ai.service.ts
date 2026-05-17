@@ -148,7 +148,10 @@ export class AiService {
     return parsed;
   }
 
-  private async generateWithGemini(model: string, prompt: string): Promise<string> {
+  private async generateWithGemini(
+    model: string,
+    prompt: string,
+  ): Promise<string> {
     if (!this.geminiApiKey) {
       this.logger.error('GEMINI_API_KEY não configurada.');
       throw new BadRequestException(
@@ -217,7 +220,10 @@ export class AiService {
     return outputText;
   }
 
-  private async generateWithOpenAi(model: string, prompt: string): Promise<string> {
+  private async generateWithOpenAi(
+    model: string,
+    prompt: string,
+  ): Promise<string> {
     if (!this.openAiApiKey) {
       this.logger.error('OPENAI_API_KEY não configurada.');
       throw new BadRequestException(
@@ -234,7 +240,10 @@ export class AiService {
     });
   }
 
-  private async generateWithOllama(model: string, prompt: string): Promise<string> {
+  private async generateWithOllama(
+    model: string,
+    prompt: string,
+  ): Promise<string> {
     return this.generateWithOpenAiCompatible({
       providerLabel: 'Ollama',
       baseUrl: this.ollamaBaseUrl,
@@ -288,7 +297,10 @@ export class AiService {
           `${input.providerLabel} excedeu tempo limite de ${this.llmTimeoutMs}ms.`,
         );
       }
-      this.logger.error(`Erro de rede ao chamar ${input.providerLabel}.`, error);
+      this.logger.error(
+        `Erro de rede ao chamar ${input.providerLabel}.`,
+        error,
+      );
       throw new BadRequestException(
         `Falha ao comunicar com ${input.providerLabel}. Verifique conexão e configuração.`,
       );
@@ -319,7 +331,10 @@ export class AiService {
 
   private buildPrompt(input: GenerateInput): string {
     const compactContext = {
-      resumeText: this.compactText(input.context.resumeText, this.maxResumeChars),
+      resumeText: this.compactText(
+        input.context.resumeText,
+        this.maxResumeChars,
+      ),
       interviewType: this.compactText(input.context.interviewType, 80),
       jobLevel: this.compactText(input.context.jobLevel, 40),
       jobDescription: this.compactText(
@@ -331,7 +346,10 @@ export class AiService {
         input.context.companySegment ?? '',
         this.maxCompanySegmentChars,
       ),
-      responsePreference: this.compactText(input.context.responsePreference, 80),
+      responsePreference: this.compactText(
+        input.context.responsePreference,
+        80,
+      ),
       aiBehavior: this.compactText(
         input.context.aiBehavior ?? '',
         this.maxAiBehaviorChars,
@@ -383,7 +401,11 @@ export class AiService {
 
   private resolveProvider(provider?: LlmProvider): LlmProvider {
     const resolved = provider ?? this.defaultProvider;
-    if (resolved === 'gemini' || resolved === 'openai' || resolved === 'ollama') {
+    if (
+      resolved === 'gemini' ||
+      resolved === 'openai' ||
+      resolved === 'ollama'
+    ) {
       return resolved;
     }
     throw new BadRequestException(`Provider LLM inválido: ${String(resolved)}`);
@@ -451,7 +473,9 @@ export class AiService {
     return text.length > 0 ? text : null;
   }
 
-  private parseSuggestedAnswer(rawOutput: string): SuggestedAnswerPayload | null {
+  private parseSuggestedAnswer(
+    rawOutput: string,
+  ): SuggestedAnswerPayload | null {
     const output = rawOutput
       .replace(/^```json\s*/i, '')
       .replace(/^```\s*/i, '')

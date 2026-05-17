@@ -38,6 +38,12 @@ PORT="3001"
 Se `model` for enviado, ele precisa estar na whitelist do provider (`*_ALLOWED_MODELS`).
 `LLM_TIMEOUT_MS` controla timeout de geração para evitar requisições penduradas.
 
+## Rodando Ollama model local
+- ollama serve
+
+## Rodando Whisper com Docker desktop
+- clique em play container
+
 ## Rodando Whisper com Docker
 
 Exemplo com `faster-whisper` OpenAI-compatible (CPU):

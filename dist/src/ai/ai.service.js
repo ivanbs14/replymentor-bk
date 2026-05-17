@@ -252,7 +252,9 @@ let AiService = AiService_1 = class AiService {
     }
     resolveProvider(provider) {
         const resolved = provider ?? this.defaultProvider;
-        if (resolved === 'gemini' || resolved === 'openai' || resolved === 'ollama') {
+        if (resolved === 'gemini' ||
+            resolved === 'openai' ||
+            resolved === 'ollama') {
             return resolved;
         }
         throw new common_1.BadRequestException(`Provider LLM inválido: ${String(resolved)}`);

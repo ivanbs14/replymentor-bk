@@ -20,77 +20,94 @@ let InterviewController = class InterviewController {
     constructor(interviewService) {
         this.interviewService = interviewService;
     }
-    createContext(payload) {
-        return this.interviewService.createContext(payload);
+    createContext(request, payload) {
+        return this.interviewService.createContext(request.user.userId, payload);
     }
-    getLatestContext() {
-        return this.interviewService.getLatestContext();
+    getLatestContext(request) {
+        return this.interviewService.getLatestContext(request.user.userId);
     }
-    startSession(payload) {
-        return this.interviewService.startSession(payload);
+    listContexts(request) {
+        return this.interviewService.listContexts(request.user.userId);
     }
-    addTranscript(sessionId, payload) {
-        return this.interviewService.addTranscript(sessionId, payload);
+    startSession(request, payload) {
+        return this.interviewService.startSession(request.user.userId, payload);
     }
-    generateResponse(sessionId, payload) {
-        return this.interviewService.generateResponse(sessionId, payload);
+    addTranscript(request, sessionId, payload) {
+        return this.interviewService.addTranscript(request.user.userId, sessionId, payload);
     }
-    endSession(sessionId) {
-        return this.interviewService.endSession(sessionId);
+    generateResponse(request, sessionId, payload) {
+        return this.interviewService.generateResponse(request.user.userId, sessionId, payload);
     }
-    getSummary(sessionId) {
-        return this.interviewService.getSummary(sessionId);
+    endSession(request, sessionId) {
+        return this.interviewService.endSession(request.user.userId, sessionId);
+    }
+    getSummary(request, sessionId) {
+        return this.interviewService.getSummary(request.user.userId, sessionId);
     }
 };
 exports.InterviewController = InterviewController;
 __decorate([
     (0, common_1.Post)('context'),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], InterviewController.prototype, "createContext", null);
 __decorate([
     (0, common_1.Get)('context/latest'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], InterviewController.prototype, "getLatestContext", null);
 __decorate([
-    (0, common_1.Post)('sessions/start'),
-    __param(0, (0, common_1.Body)()),
+    (0, common_1.Get)('contexts'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], InterviewController.prototype, "listContexts", null);
+__decorate([
+    (0, common_1.Post)('sessions/start'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], InterviewController.prototype, "startSession", null);
 __decorate([
     (0, common_1.Post)('sessions/:sessionId/transcripts'),
-    __param(0, (0, common_1.Param)('sessionId')),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('sessionId')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], InterviewController.prototype, "addTranscript", null);
 __decorate([
     (0, common_1.Post)('sessions/:sessionId/generate-response'),
-    __param(0, (0, common_1.Param)('sessionId')),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('sessionId')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], InterviewController.prototype, "generateResponse", null);
 __decorate([
     (0, common_1.Post)('sessions/:sessionId/end'),
-    __param(0, (0, common_1.Param)('sessionId')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('sessionId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], InterviewController.prototype, "endSession", null);
 __decorate([
     (0, common_1.Get)('sessions/:sessionId/summary'),
-    __param(0, (0, common_1.Param)('sessionId')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('sessionId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], InterviewController.prototype, "getSummary", null);
 exports.InterviewController = InterviewController = __decorate([

@@ -8,20 +8,34 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_service_1 = require("./prisma.service");
 const ai_service_1 = require("./ai/ai.service");
 const interview_controller_1 = require("./interview/interview.controller");
 const interview_service_1 = require("./interview/interview.service");
+const auth_controller_1 = require("./auth/auth.controller");
+const auth_service_1 = require("./auth/auth.service");
+const auth_guard_1 = require("./auth/auth.guard");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [],
-        controllers: [app_controller_1.AppController, interview_controller_1.InterviewController],
-        providers: [app_service_1.AppService, prisma_service_1.PrismaService, ai_service_1.AiService, interview_service_1.InterviewService],
+        controllers: [app_controller_1.AppController, interview_controller_1.InterviewController, auth_controller_1.AuthController],
+        providers: [
+            app_service_1.AppService,
+            prisma_service_1.PrismaService,
+            ai_service_1.AiService,
+            interview_service_1.InterviewService,
+            auth_service_1.AuthService,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: auth_guard_1.AuthGuard,
+            },
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { SessionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { AiService } from '../ai/ai.service';
@@ -18,12 +22,18 @@ export class InterviewService {
     private readonly ai: AiService,
   ) {}
 
-  async createContext(payload: CreateInterviewContextDto) {
-    return this.prisma.interviewContext.create({ data: payload });
+  async createContext(userId: string, payload: CreateInterviewContextDto) {
+    return this.prisma.interviewContext.create({
+      data: {
+        ...payload,
+        userId,
+      },
+    });
   }
 
-  async getLatestContext() {
+  async getLatestContext(userId: string) {
     const context = await this.prisma.interviewContext.findFirst({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     });
     if (!context) {
@@ -32,11 +42,50 @@ export class InterviewService {
     return context;
   }
 
-  async startSession(payload: StartSessionDto) {
+  async listContexts(userId: string) {
+    const contexts = await this.prisma.interviewContext.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        sessions: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            status: true,
+            startedAt: true,
+            endedAt: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    return contexts.map((context) => ({
+      id: context.id,
+      resumeText: context.resumeText,
+      interviewType: context.interviewType,
+      jobLevel: context.jobLevel,
+      jobDescription: context.jobDescription,
+      companyName: context.companyName,
+      companySegment: context.companySegment,
+      responsePreference: context.responsePreference,
+      aiBehavior: context.aiBehavior,
+      createdAt: context.createdAt,
+      updatedAt: context.updatedAt,
+      sessionsCount: context.sessions.length,
+      latestSessionAt: context.sessions[0]?.createdAt ?? null,
+      latestSessionStatus: context.sessions[0]?.status ?? null,
+    }));
+  }
+
+  async startSession(userId: string, payload: StartSessionDto) {
     const context = await this.prisma.interviewContext.findUnique({
       where: { id: payload.contextId },
     });
     if (!context) {
+      throw new NotFoundException('Contexto de entrevista não encontrado.');
+    }
+    if (context.userId !== userId) {
       throw new NotFoundException('Contexto de entrevista não encontrado.');
     }
 
@@ -45,11 +94,19 @@ export class InterviewService {
     });
   }
 
-  async addTranscript(sessionId: string, payload: AddTranscriptDto) {
+  async addTranscript(
+    userId: string,
+    sessionId: string,
+    payload: AddTranscriptDto,
+  ) {
     const session = await this.prisma.interviewSession.findUnique({
       where: { id: sessionId },
+      include: { context: true },
     });
     if (!session) {
+      throw new NotFoundException('Sessão não encontrada.');
+    }
+    if (session.context.userId !== userId) {
       throw new NotFoundException('Sessão não encontrada.');
     }
     if (session.status !== SessionStatus.ACTIVE) {
@@ -62,7 +119,9 @@ export class InterviewService {
       mimeType: payload.mimeType,
     });
 
-    const count = await this.prisma.transcriptChunk.count({ where: { sessionId } });
+    const count = await this.prisma.transcriptChunk.count({
+      where: { sessionId },
+    });
     return this.prisma.transcriptChunk.create({
       data: {
         sessionId,
@@ -73,12 +132,19 @@ export class InterviewService {
     });
   }
 
-  async generateResponse(sessionId: string, payload: GenerateResponseDto) {
+  async generateResponse(
+    userId: string,
+    sessionId: string,
+    payload: GenerateResponseDto,
+  ) {
     const session = await this.prisma.interviewSession.findUnique({
       where: { id: sessionId },
       include: { context: true },
     });
     if (!session) {
+      throw new NotFoundException('Sessão não encontrada.');
+    }
+    if (session.context.userId !== userId) {
       throw new NotFoundException('Sessão não encontrada.');
     }
 
@@ -137,11 +203,15 @@ export class InterviewService {
     };
   }
 
-  async endSession(sessionId: string) {
+  async endSession(userId: string, sessionId: string) {
     const session = await this.prisma.interviewSession.findUnique({
       where: { id: sessionId },
+      include: { context: true },
     });
     if (!session) {
+      throw new NotFoundException('Sessão não encontrada.');
+    }
+    if (session.context.userId !== userId) {
       throw new NotFoundException('Sessão não encontrada.');
     }
 
@@ -169,7 +239,15 @@ export class InterviewService {
     });
   }
 
-  async getSummary(sessionId: string) {
+  async getSummary(userId: string, sessionId: string) {
+    const session = await this.prisma.interviewSession.findUnique({
+      where: { id: sessionId },
+      include: { context: true },
+    });
+    if (!session || session.context.userId !== userId) {
+      throw new NotFoundException('Resumo da sessão não encontrado.');
+    }
+
     const summary = await this.prisma.sessionSummary.findUnique({
       where: { sessionId },
     });
