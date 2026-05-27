@@ -2,6 +2,13 @@
 
 API NestJS do MVP do ReplyMentor.
 
+## Contexto do Projeto
+
+Copiloto de entrevistas que escuta a conversa, identifica perguntas e sugere respostas estrategicas em tempo real.
+
+- README raiz: `../README.md`
+- Documentacao funcional/tecnica: `../doc-reply-mentor/README.md`
+
 ## Stack da feature
 
 - NestJS + TypeScript

@@ -20,7 +20,20 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
-      .expect('Hello World!');
+      .expect((response) => {
+        const body = response.body as {
+          service: string;
+          status: string;
+          timestamp: string;
+        };
+
+        expect(body).toMatchObject({
+          service: 'replymentor-backend',
+          status: 'ok',
+        });
+        expect(typeof body.timestamp).toBe('string');
+        expect(Number.isNaN(Date.parse(body.timestamp))).toBe(false);
+      });
   });
 
   afterEach(async () => {
