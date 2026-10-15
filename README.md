@@ -4,7 +4,7 @@ API NestJS do MVP do ReplyMentor.
 
 ## Contexto do Projeto
 
-Copiloto de entrevistas que escuta a conversa, identifica perguntas e sugere respostas estrategicas em tempo real.
+Plataforma de assistência inteligente que utiliza IA generativa (LLMs), processamento de áudio e integração com APIs para analisar conversas, gerar respostas contextualizadas e apoiar interações profissionais.
 
 - README raiz: `../README.md`
 - Documentacao funcional/tecnica: `../doc-reply-mentor/README.md`
