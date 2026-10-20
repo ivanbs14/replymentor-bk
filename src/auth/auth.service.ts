@@ -5,15 +5,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import type { AuthPayload } from './auth.types';
+import { JwtService } from '@nestjs/jwt';
+import type { AuthPayload, AuthResult } from './auth.types';
 import { hashPassword, verifyPassword } from './password.util';
-import { signJwt } from './jwt.util';
+import { AuthConfigService } from './auth-config.service';
 
 @Injectable()
 export class AuthService {
-  private readonly jwtSecret = process.env.JWT_SECRET || 'dev-only-change-me';
-
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly authConfig: AuthConfigService,
+  ) {}
 
   async register(payload: AuthPayload) {
     const data = this.validateCredentials(payload);
@@ -83,11 +86,17 @@ export class AuthService {
     return { email, password };
   }
 
-  private createAuthResponse(userId: string, email: string) {
-    const accessToken = signJwt({ sub: userId, email }, this.jwtSecret);
-
+  private createAuthResponse(userId: string, email: string): AuthResult {
+    const token = this.jwtService.sign(
+      { email },
+      {
+        ...this.authConfig.signOptions(),
+        secret: this.authConfig.secret,
+        subject: userId,
+      },
+    );
     return {
-      accessToken,
+      token,
       user: {
         id: userId,
         email,
