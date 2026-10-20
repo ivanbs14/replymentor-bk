@@ -61,6 +61,9 @@ describe('AppController (e2e)', () => {
       'replymentor_session=',
     );
     expect(register.headers['set-cookie']?.[0]).toContain('HttpOnly');
+    expect(register.headers['set-cookie']?.[0]).toContain('Path=/');
+    expect(register.headers['set-cookie']?.[0]).toContain('SameSite=Lax');
+    expect(register.headers['set-cookie']?.[0]).toContain('Max-Age=1800');
 
     await agent
       .get('/auth/me')

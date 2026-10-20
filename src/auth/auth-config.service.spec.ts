@@ -42,6 +42,13 @@ describe('AuthConfigService', () => {
     );
   });
 
+  it('rejects the public example secret', () => {
+    process.env.JWT_SECRET = 'replace-with-at-least-32-random-characters';
+    expect(() => new AuthConfigService()).toThrow(
+      'JWT_SECRET usa um valor público de exemplo.',
+    );
+  });
+
   it('requires explicit secure production settings', () => {
     process.env.NODE_ENV = 'production';
     delete process.env.JWT_ISSUER;

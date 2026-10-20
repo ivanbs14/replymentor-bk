@@ -55,6 +55,15 @@ export class AuthGuard implements CanActivate {
     if (typeof payload.sub !== 'string' || typeof payload.email !== 'string') {
       throw new UnauthorizedException('Token inválido ou expirado.');
     }
+    if (
+      typeof payload.iat !== 'number' ||
+      !Number.isFinite(payload.iat) ||
+      typeof payload.exp !== 'number' ||
+      !Number.isFinite(payload.exp) ||
+      payload.exp <= payload.iat
+    ) {
+      throw new UnauthorizedException('Token inválido ou expirado.');
+    }
     request.user = {
       userId: payload.sub,
       email: payload.email,

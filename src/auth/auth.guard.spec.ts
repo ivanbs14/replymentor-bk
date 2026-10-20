@@ -184,4 +184,29 @@ describe('AuthGuard', () => {
       ),
     ).toThrow(UnauthorizedException);
   });
+
+  it.each([
+    ['iat', { email: 'user@example.com', exp: 4_000_000_000 }],
+    ['exp', { email: 'user@example.com', iat: 1 }],
+  ])('rejects a token without %s', (_claim, payload) => {
+    const guard = new AuthGuard(
+      reflector as unknown as Reflector,
+      jwtService,
+      config,
+    );
+    const incomplete = jwtService.sign(payload, {
+      algorithm: 'HS256',
+      audience: config.audience,
+      issuer: config.issuer,
+      noTimestamp: true,
+      secret: config.secret,
+      subject: 'user-1',
+    });
+
+    expect(() =>
+      guard.canActivate(
+        context({ [AUTH_COOKIE_NAME]: incomplete }).executionContext,
+      ),
+    ).toThrow(UnauthorizedException);
+  });
 });

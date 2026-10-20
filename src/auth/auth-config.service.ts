@@ -4,6 +4,11 @@ import type { Algorithm, SignOptions, VerifyOptions } from 'jsonwebtoken';
 
 export const AUTH_COOKIE_NAME = 'replymentor_session';
 export const JWT_TTL_SECONDS = 30 * 60;
+const FORBIDDEN_SECRETS = new Set([
+  'change-me-in-production',
+  'dev-only-change-me',
+  'replace-with-at-least-32-random-characters',
+]);
 
 type SameSite = 'lax' | 'strict' | 'none';
 
@@ -24,6 +29,9 @@ export class AuthConfigService {
     this.secret = this.required('JWT_SECRET');
     if (this.secret.length < 32) {
       throw new Error('JWT_SECRET deve ter pelo menos 32 caracteres.');
+    }
+    if (FORBIDDEN_SECRETS.has(this.secret)) {
+      throw new Error('JWT_SECRET usa um valor público de exemplo.');
     }
 
     this.issuer = isLocal
