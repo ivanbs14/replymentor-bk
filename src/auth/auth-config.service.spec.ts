@@ -79,4 +79,15 @@ describe('AuthConfigService', () => {
       secure: true,
     });
   });
+
+  it('rejects wildcard and non-origin CORS entries', () => {
+    process.env.CORS_ORIGINS = 'https://*.example.com';
+    expect(() => new AuthConfigService()).toThrow(
+      'CORS_ORIGINS exige origins HTTP(S) exatas',
+    );
+    process.env.CORS_ORIGINS = 'https://app.example.com/path';
+    expect(() => new AuthConfigService()).toThrow(
+      'CORS_ORIGINS exige origins HTTP(S) exatas',
+    );
+  });
 });

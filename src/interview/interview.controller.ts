@@ -1,12 +1,13 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { InterviewService } from './interview.service';
-import type {
+import {
   AddTranscriptDto,
   CreateInterviewContextDto,
   GenerateResponseDto,
+  SessionParamsDto,
   StartSessionDto,
-} from './interview.types';
+} from './dto/interview.dto';
 
 type AuthenticatedRequest = Request & {
   user: { userId: string; email: string };
@@ -45,12 +46,12 @@ export class InterviewController {
   @Post('sessions/:sessionId/transcripts')
   addTranscript(
     @Req() request: AuthenticatedRequest,
-    @Param('sessionId') sessionId: string,
+    @Param() params: SessionParamsDto,
     @Body() payload: AddTranscriptDto,
   ) {
     return this.interviewService.addTranscript(
       request.user.userId,
-      sessionId,
+      params.sessionId,
       payload,
     );
   }
@@ -58,12 +59,12 @@ export class InterviewController {
   @Post('sessions/:sessionId/generate-response')
   generateResponse(
     @Req() request: AuthenticatedRequest,
-    @Param('sessionId') sessionId: string,
+    @Param() params: SessionParamsDto,
     @Body() payload: GenerateResponseDto,
   ) {
     return this.interviewService.generateResponse(
       request.user.userId,
-      sessionId,
+      params.sessionId,
       payload,
     );
   }
@@ -71,16 +72,22 @@ export class InterviewController {
   @Post('sessions/:sessionId/end')
   endSession(
     @Req() request: AuthenticatedRequest,
-    @Param('sessionId') sessionId: string,
+    @Param() params: SessionParamsDto,
   ) {
-    return this.interviewService.endSession(request.user.userId, sessionId);
+    return this.interviewService.endSession(
+      request.user.userId,
+      params.sessionId,
+    );
   }
 
   @Get('sessions/:sessionId/summary')
   getSummary(
     @Req() request: AuthenticatedRequest,
-    @Param('sessionId') sessionId: string,
+    @Param() params: SessionParamsDto,
   ) {
-    return this.interviewService.getSummary(request.user.userId, sessionId);
+    return this.interviewService.getSummary(
+      request.user.userId,
+      params.sessionId,
+    );
   }
 }

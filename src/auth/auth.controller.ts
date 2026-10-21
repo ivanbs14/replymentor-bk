@@ -2,7 +2,7 @@ import { Body, Controller, Get, Req, Post, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { AUTH_COOKIE_NAME, AuthConfigService } from './auth-config.service';
-import type { AuthPayload } from './auth.types';
+import { AuthDto } from './dto/auth.dto';
 import { Public } from './public.decorator';
 
 type AuthenticatedRequest = Request & {
@@ -19,7 +19,7 @@ export class AuthController {
   @Public()
   @Post('register')
   async register(
-    @Body() payload: AuthPayload,
+    @Body() payload: AuthDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     const { token, user } = await this.authService.register(payload);
@@ -30,7 +30,7 @@ export class AuthController {
   @Public()
   @Post('login')
   async login(
-    @Body() payload: AuthPayload,
+    @Body() payload: AuthDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     const { token, user } = await this.authService.login(payload);

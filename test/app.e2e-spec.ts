@@ -4,7 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/prisma.service';
-import cookieParser from 'cookie-parser';
+import { configureApp } from './../src/app.setup';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -41,7 +41,7 @@ describe('AppController (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    app.use(cookieParser());
+    configureApp(app);
     await app.init();
   });
 
@@ -94,6 +94,57 @@ describe('AppController (e2e)', () => {
       .set('Origin', 'https://evil.example')
       .send({})
       .expect(403);
+  });
+
+  it('rejects unknown fields with the sanitized validation contract', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .set('Origin', 'http://localhost:3000')
+      .send({ email: user.email, password: 'secret123', isAdmin: true })
+      .expect(400);
+    const body = response.body as {
+      statusCode: number;
+      code: string;
+      message: string;
+      errors: Array<{ field: string; rule: string }>;
+    };
+    expect(body).toMatchObject({
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'Payload inválido.',
+    });
+    expect(body.errors).toContainEqual({
+      field: 'isAdmin',
+      rule: 'whitelistValidation',
+    });
+    expect(JSON.stringify(response.body)).not.toContain('true');
+  });
+
+  it('enforces separate JSON and URL-encoded parser limits', async () => {
+    const jsonResponse = await request(app.getHttpServer())
+      .post('/auth/register')
+      .set('Origin', 'http://localhost:3000')
+      .send({
+        email: user.email,
+        password: 'secret123',
+        padding: 'x'.repeat(12 * 1024 * 1024),
+      })
+      .expect(413);
+    expect(jsonResponse.body).toMatchObject({
+      statusCode: 413,
+      code: 'PAYLOAD_TOO_LARGE',
+    });
+
+    const formResponse = await request(app.getHttpServer())
+      .post('/auth/register')
+      .set('Origin', 'http://localhost:3000')
+      .type('form')
+      .send({ email: user.email, password: 'x'.repeat(65 * 1024) })
+      .expect(413);
+    expect(formResponse.body).toMatchObject({
+      statusCode: 413,
+      code: 'PAYLOAD_TOO_LARGE',
+    });
   });
 
   it('/ (GET)', () => {

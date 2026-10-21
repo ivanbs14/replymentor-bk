@@ -11,7 +11,7 @@ import type {
   CreateInterviewContextDto,
   GenerateResponseDto,
   StartSessionDto,
-} from './interview.types';
+} from './dto/interview.dto';
 
 @Injectable()
 export class InterviewService {

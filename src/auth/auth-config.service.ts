@@ -55,6 +55,21 @@ export class AuthConfigService {
         'CORS_ORIGINS deve listar ao menos uma origem permitida.',
       );
     }
+    for (const origin of this.allowedOrigins) {
+      let parsed: URL;
+      try {
+        parsed = new URL(origin);
+      } catch {
+        throw new Error(`CORS_ORIGINS contém uma origem inválida: ${origin}`);
+      }
+      if (
+        !['http:', 'https:'].includes(parsed.protocol) ||
+        parsed.origin !== origin ||
+        origin.includes('*')
+      ) {
+        throw new Error(`CORS_ORIGINS exige origins HTTP(S) exatas: ${origin}`);
+      }
+    }
 
     const secureValue = process.env.COOKIE_SECURE?.trim().toLowerCase();
     if (!isLocal && !secureValue) {
