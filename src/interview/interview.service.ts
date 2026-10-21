@@ -105,7 +105,13 @@ export class InterviewService {
         data: { contextId: payload.contextId, status: SessionStatus.ACTIVE },
       });
     } catch (error) {
-      if (this.isUniqueConflict(error)) {
+      if (
+        this.isUniqueConflict(
+          error,
+          'contextId',
+          'InterviewSession_one_active_per_context',
+        )
+      ) {
         throw new ConflictException({
           code: 'ACTIVE_SESSION_EXISTS',
           message: 'Este contexto já possui uma sessão ativa.',
@@ -389,10 +395,24 @@ export class InterviewService {
     }
   }
 
-  private isUniqueConflict(error: unknown): boolean {
-    return (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
+  private isUniqueConflict(
+    error: unknown,
+    ...expectedTargets: string[]
+  ): boolean {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      error.code !== 'P2002'
+    ) {
+      return false;
+    }
+    const target = error.meta?.target;
+    const fields = Array.isArray(target)
+      ? target.filter((item): item is string => typeof item === 'string')
+      : typeof target === 'string'
+        ? [target]
+        : [];
+    return expectedTargets.some((expected) =>
+      fields.some((field) => field.includes(expected)),
     );
   }
 

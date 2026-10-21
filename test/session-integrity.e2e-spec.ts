@@ -141,6 +141,10 @@ describe('Session integrity with PostgreSQL', () => {
     expect(results.filter(({ status }) => status === 'rejected')).toHaveLength(
       1,
     );
+    const rejected = results.find(({ status }) => status === 'rejected');
+    expect(rejected).toMatchObject({
+      reason: { response: { code: 'ACTIVE_SESSION_EXISTS' } },
+    });
     expect(
       await prisma.interviewSession.count({
         where: { contextId, status: SessionStatus.ACTIVE },
@@ -221,5 +225,169 @@ describe('Session integrity with PostgreSQL', () => {
       response: { code: 'SESSION_CLOSED' },
     });
     expect(await prisma.suggestedResponse.count()).toBe(0);
+  });
+
+  it('persists one generated response for simultaneous retries with the same key', async () => {
+    await service.addTranscript(
+      userId,
+      sessionId,
+      { transcript: 'Question?' },
+      randomUUID(),
+    );
+    const key = randomUUID();
+    const [first, second] = await Promise.all([
+      service.generateResponse(userId, sessionId, {}, key),
+      service.generateResponse(userId, sessionId, {}, key),
+    ]);
+
+    expect(first.id).toBe(second.id);
+    expect(await prisma.suggestedResponse.count()).toBe(1);
+  });
+
+  it('rejects reuse of a generation key with a different fingerprint', async () => {
+    await service.addTranscript(
+      userId,
+      sessionId,
+      { transcript: 'Question?' },
+      randomUUID(),
+    );
+    const key = randomUUID();
+    await service.generateResponse(
+      userId,
+      sessionId,
+      { provider: 'gemini', model: 'gemini-2.0-flash' },
+      key,
+    );
+
+    await expect(
+      service.generateResponse(
+        userId,
+        sessionId,
+        { forceQuestion: 'Different question?' },
+        key,
+      ),
+    ).rejects.toMatchObject({
+      response: { code: 'IDEMPOTENCY_KEY_REUSED' },
+    });
+    expect(await prisma.suggestedResponse.count()).toBe(1);
+  });
+
+  it('keeps chunks and responses immutable after closing', async () => {
+    await service.addTranscript(
+      userId,
+      sessionId,
+      { transcript: 'Question?' },
+      randomUUID(),
+    );
+    await service.generateResponse(userId, sessionId, {}, randomUUID());
+    await service.endSession(userId, sessionId);
+    const before = {
+      chunks: await prisma.transcriptChunk.count(),
+      responses: await prisma.suggestedResponse.count(),
+    };
+
+    await expect(
+      service.addTranscript(
+        userId,
+        sessionId,
+        { transcript: 'Late question?' },
+        randomUUID(),
+      ),
+    ).rejects.toMatchObject({ response: { code: 'SESSION_CLOSED' } });
+    await expect(
+      service.generateResponse(userId, sessionId, {}, randomUUID()),
+    ).rejects.toMatchObject({ response: { code: 'SESSION_CLOSED' } });
+    expect(await prisma.transcriptChunk.count()).toBe(before.chunks);
+    expect(await prisma.suggestedResponse.count()).toBe(before.responses);
+  });
+
+  it('keeps migration backfill, indexes, and legacy nullable keys compatible', async () => {
+    await prisma.transcriptChunk.createMany({
+      data: [
+        { sessionId, sequence: 3, content: 'legacy 3' },
+        { sessionId, sequence: 7, content: 'legacy 7' },
+      ],
+    });
+    await prisma.interviewSession.update({
+      where: { id: sessionId },
+      data: { nextTranscriptSequence: 1 },
+    });
+    await prisma.$executeRawUnsafe(`
+      UPDATE "InterviewSession" AS session
+      SET "nextTranscriptSequence" = chunks."nextSequence"
+      FROM (
+        SELECT "sessionId", COALESCE(MAX("sequence"), 0) + 1 AS "nextSequence"
+        FROM "TranscriptChunk"
+        GROUP BY "sessionId"
+      ) AS chunks
+      WHERE chunks."sessionId" = session."id"
+    `);
+    expect(
+      (
+        await prisma.interviewSession.findUniqueOrThrow({
+          where: { id: sessionId },
+        })
+      ).nextTranscriptSequence,
+    ).toBe(8);
+    expect(
+      await prisma.transcriptChunk.count({
+        where: { idempotencyKey: null, requestFingerprint: null },
+      }),
+    ).toBe(2);
+
+    const indexes = await prisma.$queryRaw<Array<{ indexname: string }>>`
+      SELECT indexname
+      FROM pg_indexes
+      WHERE schemaname = 'public'
+        AND indexname IN (
+          'InterviewSession_one_active_per_context',
+          'TranscriptChunk_session_idempotency_key',
+          'SuggestedResponse_session_idempotency_key'
+        )
+    `;
+    expect(indexes.map(({ indexname }) => indexname).sort()).toEqual([
+      'InterviewSession_one_active_per_context',
+      'SuggestedResponse_session_idempotency_key',
+      'TranscriptChunk_session_idempotency_key',
+    ]);
+  });
+
+  it('reports duplicate context ids during the migration preflight', async () => {
+    await prisma.$executeRawUnsafe(
+      'DROP INDEX "InterviewSession_one_active_per_context"',
+    );
+    try {
+      await prisma.interviewSession.create({ data: { contextId } });
+      const preflight = `
+        DO $$
+        DECLARE duplicate_contexts TEXT;
+        BEGIN
+          SELECT STRING_AGG(FORMAT('%s (%s)', duplicates."contextId", duplicates."activeCount"), ', ')
+          INTO duplicate_contexts
+          FROM (
+            SELECT "contextId", COUNT(*) AS "activeCount"
+            FROM "InterviewSession"
+            WHERE "status" = 'ACTIVE'
+            GROUP BY "contextId"
+            HAVING COUNT(*) > 1
+          ) AS duplicates;
+          IF duplicate_contexts IS NOT NULL THEN
+            RAISE EXCEPTION 'FEAT-010 preflight: multiple ACTIVE sessions: %', duplicate_contexts;
+          END IF;
+        END $$;
+      `;
+      await expect(prisma.$executeRawUnsafe(preflight)).rejects.toThrow(
+        contextId,
+      );
+    } finally {
+      await prisma.interviewSession.deleteMany({
+        where: { contextId, id: { not: sessionId } },
+      });
+      await prisma.$executeRawUnsafe(`
+        CREATE UNIQUE INDEX "InterviewSession_one_active_per_context"
+        ON "InterviewSession" ("contextId")
+        WHERE "status" = 'ACTIVE'
+      `);
+    }
   });
 });

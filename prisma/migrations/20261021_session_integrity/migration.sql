@@ -19,15 +19,21 @@ FROM (
 WHERE chunks."sessionId" = session."id";
 
 DO $$
+DECLARE
+  duplicate_contexts TEXT;
 BEGIN
-  IF EXISTS (
-    SELECT 1
+  SELECT STRING_AGG(FORMAT('%s (%s)', duplicates."contextId", duplicates."activeCount"), ', ')
+  INTO duplicate_contexts
+  FROM (
+    SELECT "contextId", COUNT(*) AS "activeCount"
     FROM "InterviewSession"
     WHERE "status" = 'ACTIVE'
     GROUP BY "contextId"
     HAVING COUNT(*) > 1
-  ) THEN
-    RAISE EXCEPTION 'FEAT-010 preflight: multiple ACTIVE sessions exist for one or more contexts';
+  ) AS duplicates;
+
+  IF duplicate_contexts IS NOT NULL THEN
+    RAISE EXCEPTION 'FEAT-010 preflight: multiple ACTIVE sessions: %', duplicate_contexts;
   END IF;
 END $$;
 
