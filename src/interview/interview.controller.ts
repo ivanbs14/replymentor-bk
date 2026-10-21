@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Req,
+} from '@nestjs/common';
 import type { Request } from 'express';
 import { InterviewService } from './interview.service';
 import {
@@ -8,6 +16,7 @@ import {
   SessionParamsDto,
   StartSessionDto,
 } from './dto/interview.dto';
+import { assertIdempotencyKey } from './idempotency';
 
 type AuthenticatedRequest = Request & {
   user: { userId: string; email: string };
@@ -48,11 +57,13 @@ export class InterviewController {
     @Req() request: AuthenticatedRequest,
     @Param() params: SessionParamsDto,
     @Body() payload: AddTranscriptDto,
+    @Headers('idempotency-key') rawIdempotencyKey: string | undefined,
   ) {
     return this.interviewService.addTranscript(
       request.user.userId,
       params.sessionId,
       payload,
+      assertIdempotencyKey(rawIdempotencyKey),
     );
   }
 
@@ -61,11 +72,13 @@ export class InterviewController {
     @Req() request: AuthenticatedRequest,
     @Param() params: SessionParamsDto,
     @Body() payload: GenerateResponseDto,
+    @Headers('idempotency-key') rawIdempotencyKey: string | undefined,
   ) {
     return this.interviewService.generateResponse(
       request.user.userId,
       params.sessionId,
       payload,
+      assertIdempotencyKey(rawIdempotencyKey),
     );
   }
 

@@ -178,8 +178,10 @@ export class AiService {
   async generateSuggestedAnswer(
     input: GenerateInput,
   ): Promise<SuggestedAnswerPayload> {
-    const provider = this.resolveProvider(input.provider);
-    const model = this.resolveModel(provider, input.model);
+    const { provider, model } = this.resolveGenerationTarget(
+      input.provider,
+      input.model,
+    );
     const prompt = this.buildPrompt(input);
 
     let outputText: string;
@@ -198,6 +200,14 @@ export class AiService {
     }
 
     return parsed;
+  }
+
+  resolveGenerationTarget(provider?: LlmProvider, model?: string) {
+    const resolvedProvider = this.resolveProvider(provider);
+    return {
+      provider: resolvedProvider,
+      model: this.resolveModel(resolvedProvider, model),
+    };
   }
 
   private async generateWithGemini(

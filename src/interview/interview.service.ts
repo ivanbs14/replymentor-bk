@@ -1,9 +1,10 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { SessionStatus } from '@prisma/client';
+import { Prisma, SessionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { AiService } from '../ai/ai.service';
 import type {
@@ -12,6 +13,16 @@ import type {
   GenerateResponseDto,
   StartSessionDto,
 } from './dto/interview.dto';
+import {
+  buildGenerationFingerprint,
+  buildTranscriptFingerprint,
+} from './idempotency';
+
+type LockedSession = {
+  id: string;
+  status: SessionStatus;
+  nextTranscriptSequence: number;
+};
 
 @Injectable()
 export class InterviewService {
@@ -89,15 +100,26 @@ export class InterviewService {
       throw new NotFoundException('Contexto de entrevista não encontrado.');
     }
 
-    return this.prisma.interviewSession.create({
-      data: { contextId: payload.contextId, status: SessionStatus.ACTIVE },
-    });
+    try {
+      return await this.prisma.interviewSession.create({
+        data: { contextId: payload.contextId, status: SessionStatus.ACTIVE },
+      });
+    } catch (error) {
+      if (this.isUniqueConflict(error)) {
+        throw new ConflictException({
+          code: 'ACTIVE_SESSION_EXISTS',
+          message: 'Este contexto já possui uma sessão ativa.',
+        });
+      }
+      throw error;
+    }
   }
 
   async addTranscript(
     userId: string,
     sessionId: string,
     payload: AddTranscriptDto,
+    idempotencyKey: string,
   ) {
     const session = await this.prisma.interviewSession.findUnique({
       where: { id: sessionId },
@@ -109,9 +131,18 @@ export class InterviewService {
     if (session.context.userId !== userId) {
       throw new NotFoundException('Sessão não encontrada.');
     }
-    if (session.status !== SessionStatus.ACTIVE) {
-      throw new BadRequestException('Sessão já encerrada.');
+    const requestFingerprint = buildTranscriptFingerprint(payload);
+    const existing = await this.prisma.transcriptChunk.findFirst({
+      where: { sessionId, idempotencyKey },
+    });
+    if (existing) {
+      this.assertMatchingFingerprint(
+        existing.requestFingerprint,
+        requestFingerprint,
+      );
+      return existing;
     }
+    this.assertActive(session.status);
 
     const transcript = await this.ai.transcribeLiveChunk({
       transcript: payload.transcript,
@@ -119,16 +150,34 @@ export class InterviewService {
       mimeType: payload.mimeType,
     });
 
-    const count = await this.prisma.transcriptChunk.count({
-      where: { sessionId },
-    });
-    return this.prisma.transcriptChunk.create({
-      data: {
-        sessionId,
-        sequence: count + 1,
-        content: transcript,
-        source: payload.transcript ? 'manual' : 'stt',
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const locked = await this.lockOwnedSession(tx, userId, sessionId);
+      const replay = await tx.transcriptChunk.findFirst({
+        where: { sessionId, idempotencyKey },
+      });
+      if (replay) {
+        this.assertMatchingFingerprint(
+          replay.requestFingerprint,
+          requestFingerprint,
+        );
+        return replay;
+      }
+      this.assertActive(locked.status);
+
+      await tx.interviewSession.update({
+        where: { id: sessionId },
+        data: { nextTranscriptSequence: { increment: 1 } },
+      });
+      return tx.transcriptChunk.create({
+        data: {
+          sessionId,
+          sequence: locked.nextTranscriptSequence,
+          content: transcript,
+          source: payload.transcript ? 'manual' : 'stt',
+          idempotencyKey,
+          requestFingerprint,
+        },
+      });
     });
   }
 
@@ -136,6 +185,7 @@ export class InterviewService {
     userId: string,
     sessionId: string,
     payload: GenerateResponseDto,
+    idempotencyKey: string,
   ) {
     const session = await this.prisma.interviewSession.findUnique({
       where: { id: sessionId },
@@ -147,6 +197,25 @@ export class InterviewService {
     if (session.context.userId !== userId) {
       throw new NotFoundException('Sessão não encontrada.');
     }
+    const target = this.ai.resolveGenerationTarget(
+      payload.provider,
+      payload.model,
+    );
+    const requestFingerprint = buildGenerationFingerprint({
+      forceQuestion: payload.forceQuestion,
+      ...target,
+    });
+    const existing = await this.prisma.suggestedResponse.findFirst({
+      where: { sessionId, idempotencyKey },
+    });
+    if (existing) {
+      this.assertMatchingFingerprint(
+        existing.requestFingerprint,
+        requestFingerprint,
+      );
+      return this.toSuggestedResponse(existing);
+    }
+    this.assertActive(session.status);
 
     const latestChunks = await this.prisma.transcriptChunk.findMany({
       where: { sessionId },
@@ -177,65 +246,72 @@ export class InterviewService {
       },
       detectedQuestion,
       transcriptWindow,
-      provider: payload.provider,
-      model: payload.model,
+      provider: target.provider,
+      model: target.model,
     });
 
-    const saved = await this.prisma.suggestedResponse.create({
-      data: {
-        sessionId,
-        detectedQuestion: generated.detectedQuestion,
-        suggestedAnswer: generated.suggestedAnswer,
-        shortVersion: generated.shortVersion,
-        keyPoints: generated.keyPoints,
-        strategicNote: generated.strategicNote,
-      },
+    const saved = await this.prisma.$transaction(async (tx) => {
+      const locked = await this.lockOwnedSession(tx, userId, sessionId);
+      const replay = await tx.suggestedResponse.findFirst({
+        where: { sessionId, idempotencyKey },
+      });
+      if (replay) {
+        this.assertMatchingFingerprint(
+          replay.requestFingerprint,
+          requestFingerprint,
+        );
+        return replay;
+      }
+      this.assertActive(locked.status);
+      return tx.suggestedResponse.create({
+        data: {
+          sessionId,
+          detectedQuestion: generated.detectedQuestion,
+          suggestedAnswer: generated.suggestedAnswer,
+          shortVersion: generated.shortVersion,
+          keyPoints: generated.keyPoints,
+          strategicNote: generated.strategicNote,
+          idempotencyKey,
+          requestFingerprint,
+        },
+      });
     });
 
-    return {
-      id: saved.id,
-      detectedQuestion: saved.detectedQuestion,
-      suggestedAnswer: saved.suggestedAnswer,
-      shortVersion: saved.shortVersion,
-      keyPoints: saved.keyPoints,
-      strategicNote: saved.strategicNote,
-      createdAt: saved.createdAt,
-    };
+    return this.toSuggestedResponse(saved);
   }
 
   async endSession(userId: string, sessionId: string) {
-    const session = await this.prisma.interviewSession.findUnique({
-      where: { id: sessionId },
-      include: { context: true },
-    });
-    if (!session) {
-      throw new NotFoundException('Sessão não encontrada.');
-    }
-    if (session.context.userId !== userId) {
-      throw new NotFoundException('Sessão não encontrada.');
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const session = await this.lockOwnedSession(tx, userId, sessionId);
+      if (session.status === SessionStatus.CLOSED) {
+        const existing = await tx.sessionSummary.findUnique({
+          where: { sessionId },
+        });
+        if (!existing) {
+          throw new NotFoundException('Resumo da sessão não encontrado.');
+        }
+        return existing;
+      }
 
-    const responses = await this.prisma.suggestedResponse.findMany({
-      where: { sessionId },
-      orderBy: { createdAt: 'asc' },
-    });
+      const responses = await tx.suggestedResponse.findMany({
+        where: { sessionId },
+        orderBy: { createdAt: 'asc' },
+      });
+      const content =
+        responses.length === 0
+          ? 'Sessão encerrada sem respostas sugeridas registradas.'
+          : `Sessão encerrada com ${responses.length} respostas sugeridas.`;
+      const topics = responses
+        .map((response) => response.detectedQuestion)
+        .slice(-10);
 
-    const content =
-      responses.length === 0
-        ? 'Sessão encerrada sem respostas sugeridas registradas.'
-        : `Sessão encerrada com ${responses.length} respostas sugeridas.`;
-
-    const topics = responses.map((r) => r.detectedQuestion).slice(-10);
-
-    await this.prisma.interviewSession.update({
-      where: { id: sessionId },
-      data: { status: SessionStatus.CLOSED, endedAt: new Date() },
-    });
-
-    return this.prisma.sessionSummary.upsert({
-      where: { sessionId },
-      update: { content, topics },
-      create: { sessionId, content, topics },
+      await tx.interviewSession.update({
+        where: { id: sessionId },
+        data: { status: SessionStatus.CLOSED, endedAt: new Date() },
+      });
+      return tx.sessionSummary.create({
+        data: { sessionId, content, topics },
+      });
     });
   }
 
@@ -271,5 +347,72 @@ export class InterviewService {
     }
 
     return lines.length > 0 ? lines[lines.length - 1] : null;
+  }
+
+  private async lockOwnedSession(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    sessionId: string,
+  ): Promise<LockedSession> {
+    const rows = await tx.$queryRaw<LockedSession[]>(Prisma.sql`
+      SELECT session."id", session."status", session."nextTranscriptSequence"
+      FROM "InterviewSession" AS session
+      INNER JOIN "InterviewContext" AS context ON context."id" = session."contextId"
+      WHERE session."id" = ${sessionId} AND context."userId" = ${userId}
+      FOR UPDATE OF session
+    `);
+    const session = rows[0];
+    if (!session) {
+      throw new NotFoundException('Sessão não encontrada.');
+    }
+    return session;
+  }
+
+  private assertActive(status: SessionStatus): void {
+    if (status !== SessionStatus.ACTIVE) {
+      throw new ConflictException({
+        code: 'SESSION_CLOSED',
+        message: 'A sessão já foi encerrada.',
+      });
+    }
+  }
+
+  private assertMatchingFingerprint(
+    stored: string | null,
+    received: string,
+  ): void {
+    if (stored !== received) {
+      throw new ConflictException({
+        code: 'IDEMPOTENCY_KEY_REUSED',
+        message: 'Idempotency-Key já utilizada com outro payload.',
+      });
+    }
+  }
+
+  private isUniqueConflict(error: unknown): boolean {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    );
+  }
+
+  private toSuggestedResponse(response: {
+    id: string;
+    detectedQuestion: string;
+    suggestedAnswer: string;
+    shortVersion: string;
+    keyPoints: string[];
+    strategicNote: string;
+    createdAt: Date;
+  }) {
+    return {
+      id: response.id,
+      detectedQuestion: response.detectedQuestion,
+      suggestedAnswer: response.suggestedAnswer,
+      shortVersion: response.shortVersion,
+      keyPoints: response.keyPoints,
+      strategicNote: response.strategicNote,
+      createdAt: response.createdAt,
+    };
   }
 }
