@@ -1,0 +1,1150 @@
+[
+  {
+    "id": "explicit_question_mark-001",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você organiza prioridades em uma semana intensa?"
+    ],
+    "expectedQuestion": "Como você organiza prioridades em uma semana intensa?"
+  },
+  {
+    "id": "explicit_question_mark-002",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Qual foi o principal aprendizado de um projeto difícil?"
+    ],
+    "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?"
+  },
+  {
+    "id": "explicit_question_mark-003",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você comunica um risco técnico para outras áreas?"
+    ],
+    "expectedQuestion": "Como você comunica um risco técnico para outras áreas?"
+  },
+  {
+    "id": "explicit_question_mark-004",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "O que você considera ao revisar uma solução?"
+    ],
+    "expectedQuestion": "O que você considera ao revisar uma solução?"
+  },
+  {
+    "id": "explicit_question_mark-005",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você reage quando uma estimativa muda?"
+    ],
+    "expectedQuestion": "Como você reage quando uma estimativa muda?"
+  },
+  {
+    "id": "explicit_question_mark-006",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Qual abordagem você usa para investigar uma falha?"
+    ],
+    "expectedQuestion": "Qual abordagem você usa para investigar uma falha?"
+  },
+  {
+    "id": "explicit_question_mark-007",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você garante clareza em decisões técnicas?"
+    ],
+    "expectedQuestion": "Como você garante clareza em decisões técnicas?"
+  },
+  {
+    "id": "explicit_question_mark-008",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "O que faz quando recebe requisitos incompletos?"
+    ],
+    "expectedQuestion": "O que faz quando recebe requisitos incompletos?"
+  },
+  {
+    "id": "explicit_question_mark-009",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você acompanha a qualidade de uma entrega?"
+    ],
+    "expectedQuestion": "Como você acompanha a qualidade de uma entrega?"
+  },
+  {
+    "id": "explicit_question_mark-010",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Qual é sua forma de colaborar com pessoas de outras áreas?"
+    ],
+    "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?"
+  },
+  {
+    "id": "explicit_question_mark-011",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você decide entre velocidade e manutenção?"
+    ],
+    "expectedQuestion": "Como você decide entre velocidade e manutenção?"
+  },
+  {
+    "id": "explicit_question_mark-012",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "O que você aprendeu ao trabalhar com sistemas legados?"
+    ],
+    "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?"
+  },
+  {
+    "id": "explicit_question_mark-013",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você conduz uma conversa sobre divergências?"
+    ],
+    "expectedQuestion": "Como você conduz uma conversa sobre divergências?"
+  },
+  {
+    "id": "explicit_question_mark-014",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Qual foi uma decisão técnica que você reconsiderou?"
+    ],
+    "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?"
+  },
+  {
+    "id": "explicit_question_mark-015",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você estrutura uma investigação de desempenho?"
+    ],
+    "expectedQuestion": "Como você estrutura uma investigação de desempenho?"
+  },
+  {
+    "id": "explicit_question_mark-016",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "O que costuma observar antes de publicar uma mudança?"
+    ],
+    "expectedQuestion": "O que costuma observar antes de publicar uma mudança?"
+  },
+  {
+    "id": "explicit_question_mark-017",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você compartilha conhecimento com a equipe?"
+    ],
+    "expectedQuestion": "Como você compartilha conhecimento com a equipe?"
+  },
+  {
+    "id": "explicit_question_mark-018",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Qual é seu processo para entender um domínio novo?"
+    ],
+    "expectedQuestion": "Qual é seu processo para entender um domínio novo?"
+  },
+  {
+    "id": "explicit_question_mark-019",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "Entrevistador: Como você mede se uma solução resolveu o problema?"
+    ],
+    "expectedQuestion": "Como você mede se uma solução resolveu o problema?"
+  },
+  {
+    "id": "explicit_question_mark-020",
+    "category": "explicit_question_mark",
+    "description": "Pergunta explícita com pontuação interrogativa.",
+    "chunks": [
+      "O que você espera de uma boa revisão de código?"
+    ],
+    "expectedQuestion": "O que você espera de uma boa revisão de código?"
+  },
+  {
+    "id": "without_punctuation-001",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "Entrevistador: como você lida com prioridades concorrentes"
+    ],
+    "expectedQuestion": "como você lida com prioridades concorrentes"
+  },
+  {
+    "id": "without_punctuation-002",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "me explique sua forma de investigar incidentes"
+    ],
+    "expectedQuestion": "me explique sua forma de investigar incidentes"
+  },
+  {
+    "id": "without_punctuation-003",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "Entrevistador: qual foi seu maior aprendizado recente"
+    ],
+    "expectedQuestion": "qual foi seu maior aprendizado recente"
+  },
+  {
+    "id": "without_punctuation-004",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "como você comunica uma decisão impopular"
+    ],
+    "expectedQuestion": "como você comunica uma decisão impopular"
+  },
+  {
+    "id": "without_punctuation-005",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "Entrevistador: o que você faz diante de um requisito ambíguo"
+    ],
+    "expectedQuestion": "o que você faz diante de um requisito ambíguo"
+  },
+  {
+    "id": "without_punctuation-006",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "como você reduz riscos antes de uma entrega"
+    ],
+    "expectedQuestion": "como você reduz riscos antes de uma entrega"
+  },
+  {
+    "id": "without_punctuation-007",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "Entrevistador: qual abordagem usa para estimar tarefas"
+    ],
+    "expectedQuestion": "qual abordagem usa para estimar tarefas"
+  },
+  {
+    "id": "without_punctuation-008",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "como você organiza uma revisão técnica"
+    ],
+    "expectedQuestion": "como você organiza uma revisão técnica"
+  },
+  {
+    "id": "without_punctuation-009",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "Entrevistador: o que considera ao escolher uma ferramenta"
+    ],
+    "expectedQuestion": "o que considera ao escolher uma ferramenta"
+  },
+  {
+    "id": "without_punctuation-010",
+    "category": "without_punctuation",
+    "description": "Pergunta direta sem pontuação no fim do trecho.",
+    "chunks": [
+      "como você reage a uma mudança urgente"
+    ],
+    "expectedQuestion": "como você reage a uma mudança urgente"
+  },
+  {
+    "id": "without_punctuation-011",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "Entrevistador: qual foi uma situação em que precisou negociar escopo",
+      "Candidato: Eu começaria reunindo os sinais disponíveis."
+    ],
+    "expectedQuestion": "qual foi uma situação em que precisou negociar escopo"
+  },
+  {
+    "id": "without_punctuation-012",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "como você identifica a causa de uma regressão",
+      "Nesse caso eu alinharia primeiro o objetivo."
+    ],
+    "expectedQuestion": "como você identifica a causa de uma regressão"
+  },
+  {
+    "id": "without_punctuation-013",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "Entrevistador: me conte como você melhora um processo da equipe",
+      "Candidato: Minha prioridade seria reduzir o risco imediato."
+    ],
+    "expectedQuestion": "me conte como você melhora um processo da equipe"
+  },
+  {
+    "id": "without_punctuation-014",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "o que você faria diante de métricas contraditórias",
+      "Eu registraria a decisão e os critérios usados."
+    ],
+    "expectedQuestion": "o que você faria diante de métricas contraditórias"
+  },
+  {
+    "id": "without_punctuation-015",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "Entrevistador: como você documenta uma decisão importante",
+      "Candidato: A primeira etapa seria confirmar o impacto."
+    ],
+    "expectedQuestion": "como você documenta uma decisão importante"
+  },
+  {
+    "id": "without_punctuation-016",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "qual é sua estratégia para aprender um sistema existente",
+      "Eu buscaria uma alternativa reversível."
+    ],
+    "expectedQuestion": "qual é sua estratégia para aprender um sistema existente"
+  },
+  {
+    "id": "without_punctuation-017",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "Entrevistador: como você atua quando falta contexto",
+      "Candidato: Depois eu compartilharia o resultado com a equipe."
+    ],
+    "expectedQuestion": "como você atua quando falta contexto"
+  },
+  {
+    "id": "without_punctuation-018",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "me explique como você valida uma hipótese",
+      "Eu separaria fatos, hipóteses e próximos testes."
+    ],
+    "expectedQuestion": "me explique como você valida uma hipótese"
+  },
+  {
+    "id": "without_punctuation-019",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "Entrevistador: o que você busca em uma parceria de trabalho",
+      "Candidato: A experiência me ensinou a validar antes de ampliar."
+    ],
+    "expectedQuestion": "o que você busca em uma parceria de trabalho"
+  },
+  {
+    "id": "without_punctuation-020",
+    "category": "without_punctuation",
+    "description": "Pergunta sem pontuação seguida por fala do candidato.",
+    "chunks": [
+      "como você acompanha uma entrega depois da publicação",
+      "Eu acompanharia os indicadores após a mudança."
+    ],
+    "expectedQuestion": "como você acompanha uma entrega depois da publicação"
+  },
+  {
+    "id": "implicit_question-001",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Conte sobre uma situação em que você precisou adaptar o plano."
+    ],
+    "expectedQuestion": "Conte sobre uma situação em que você precisou adaptar o plano."
+  },
+  {
+    "id": "implicit_question-002",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Descreva uma decisão tomada com informações incompletas."
+    ],
+    "expectedQuestion": "Descreva uma decisão tomada com informações incompletas."
+  },
+  {
+    "id": "implicit_question-003",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Explique como você prepara uma mudança de alto risco."
+    ],
+    "expectedQuestion": "Explique como você prepara uma mudança de alto risco."
+  },
+  {
+    "id": "implicit_question-004",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Dê um exemplo de colaboração entre áreas."
+    ],
+    "expectedQuestion": "Dê um exemplo de colaboração entre áreas."
+  },
+  {
+    "id": "implicit_question-005",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Fale sobre um aprendizado obtido após um erro."
+    ],
+    "expectedQuestion": "Fale sobre um aprendizado obtido após um erro."
+  },
+  {
+    "id": "implicit_question-006",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Mostre como você divide um problema complexo."
+    ],
+    "expectedQuestion": "Mostre como você divide um problema complexo."
+  },
+  {
+    "id": "implicit_question-007",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Conte como você reage a uma revisão crítica."
+    ],
+    "expectedQuestion": "Conte como você reage a uma revisão crítica."
+  },
+  {
+    "id": "implicit_question-008",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Descreva seu processo para priorizar débitos técnicos."
+    ],
+    "expectedQuestion": "Descreva seu processo para priorizar débitos técnicos."
+  },
+  {
+    "id": "implicit_question-009",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Explique como você valida uma solução antes de entregá-la."
+    ],
+    "expectedQuestion": "Explique como você valida uma solução antes de entregá-la."
+  },
+  {
+    "id": "implicit_question-010",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Dê um exemplo de melhoria contínua que você promoveu."
+    ],
+    "expectedQuestion": "Dê um exemplo de melhoria contínua que você promoveu."
+  },
+  {
+    "id": "implicit_question-011",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Fale sobre uma ocasião em que mudou de opinião."
+    ],
+    "expectedQuestion": "Fale sobre uma ocasião em que mudou de opinião."
+  },
+  {
+    "id": "implicit_question-012",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Conte como você conduz uma investigação sem evidência inicial."
+    ],
+    "expectedQuestion": "Conte como você conduz uma investigação sem evidência inicial."
+  },
+  {
+    "id": "implicit_question-013",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Descreva como você alinha expectativas com outras pessoas."
+    ],
+    "expectedQuestion": "Descreva como você alinha expectativas com outras pessoas."
+  },
+  {
+    "id": "implicit_question-014",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Explique como você evita repetir uma falha."
+    ],
+    "expectedQuestion": "Explique como você evita repetir uma falha."
+  },
+  {
+    "id": "implicit_question-015",
+    "category": "implicit_question",
+    "description": "Solicitação implícita que requer resposta, sem ponto de interrogação.",
+    "chunks": [
+      "Entrevistador: Dê um exemplo de decisão orientada por dados."
+    ],
+    "expectedQuestion": "Dê um exemplo de decisão orientada por dados."
+  },
+  {
+    "id": "multiple_questions-001",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: Qual abordagem você usa para investigar uma falha?",
+      "Entrevistador: Como você organiza prioridades em uma semana intensa?"
+    ],
+    "expectedQuestion": "Como você organiza prioridades em uma semana intensa?"
+  },
+  {
+    "id": "multiple_questions-002",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Como você garante clareza em decisões técnicas? Qual foi o principal aprendizado de um projeto difícil?"
+    ],
+    "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?"
+  },
+  {
+    "id": "multiple_questions-003",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: O que faz quando recebe requisitos incompletos?",
+      "Entrevistador: Como você comunica um risco técnico para outras áreas?"
+    ],
+    "expectedQuestion": "Como você comunica um risco técnico para outras áreas?"
+  },
+  {
+    "id": "multiple_questions-004",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Como você acompanha a qualidade de uma entrega? O que você considera ao revisar uma solução?"
+    ],
+    "expectedQuestion": "O que você considera ao revisar uma solução?"
+  },
+  {
+    "id": "multiple_questions-005",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "Entrevistador: Como você reage quando uma estimativa muda?"
+    ],
+    "expectedQuestion": "Como você reage quando uma estimativa muda?"
+  },
+  {
+    "id": "multiple_questions-006",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Como você decide entre velocidade e manutenção? Qual abordagem você usa para investigar uma falha?"
+    ],
+    "expectedQuestion": "Qual abordagem você usa para investigar uma falha?"
+  },
+  {
+    "id": "multiple_questions-007",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: O que você aprendeu ao trabalhar com sistemas legados?",
+      "Entrevistador: Como você garante clareza em decisões técnicas?"
+    ],
+    "expectedQuestion": "Como você garante clareza em decisões técnicas?"
+  },
+  {
+    "id": "multiple_questions-008",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Como você conduz uma conversa sobre divergências? O que faz quando recebe requisitos incompletos?"
+    ],
+    "expectedQuestion": "O que faz quando recebe requisitos incompletos?"
+  },
+  {
+    "id": "multiple_questions-009",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: Qual foi uma decisão técnica que você reconsiderou?",
+      "Entrevistador: Como você acompanha a qualidade de uma entrega?"
+    ],
+    "expectedQuestion": "Como você acompanha a qualidade de uma entrega?"
+  },
+  {
+    "id": "multiple_questions-010",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Como você estrutura uma investigação de desempenho? Qual é sua forma de colaborar com pessoas de outras áreas?"
+    ],
+    "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?"
+  },
+  {
+    "id": "multiple_questions-011",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: O que costuma observar antes de publicar uma mudança?",
+      "Entrevistador: Como você decide entre velocidade e manutenção?"
+    ],
+    "expectedQuestion": "Como você decide entre velocidade e manutenção?"
+  },
+  {
+    "id": "multiple_questions-012",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Como você compartilha conhecimento com a equipe? O que você aprendeu ao trabalhar com sistemas legados?"
+    ],
+    "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?"
+  },
+  {
+    "id": "multiple_questions-013",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: Qual é seu processo para entender um domínio novo?",
+      "Entrevistador: Como você conduz uma conversa sobre divergências?"
+    ],
+    "expectedQuestion": "Como você conduz uma conversa sobre divergências?"
+  },
+  {
+    "id": "multiple_questions-014",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Como você mede se uma solução resolveu o problema? Qual foi uma decisão técnica que você reconsiderou?"
+    ],
+    "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?"
+  },
+  {
+    "id": "multiple_questions-015",
+    "category": "multiple_questions",
+    "description": "Duas perguntas no trecho; o rótulo aponta para a mais recente.",
+    "chunks": [
+      "Entrevistador: O que você espera de uma boa revisão de código?",
+      "Entrevistador: Como você estrutura uma investigação de desempenho?"
+    ],
+    "expectedQuestion": "Como você estrutura uma investigação de desempenho?"
+  },
+  {
+    "id": "candidate_after_question-001",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: Como você organiza prioridades em uma semana intensa?",
+      "Candidato: Eu começaria reunindo os sinais disponíveis."
+    ],
+    "expectedQuestion": "Como você organiza prioridades em uma semana intensa?"
+  },
+  {
+    "id": "candidate_after_question-002",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Qual foi o principal aprendizado de um projeto difícil?",
+      "Nesse caso eu alinharia primeiro o objetivo."
+    ],
+    "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?"
+  },
+  {
+    "id": "candidate_after_question-003",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: Como você comunica um risco técnico para outras áreas?",
+      "Candidato: Minha prioridade seria reduzir o risco imediato."
+    ],
+    "expectedQuestion": "Como você comunica um risco técnico para outras áreas?"
+  },
+  {
+    "id": "candidate_after_question-004",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "O que você considera ao revisar uma solução?",
+      "Eu registraria a decisão e os critérios usados."
+    ],
+    "expectedQuestion": "O que você considera ao revisar uma solução?"
+  },
+  {
+    "id": "candidate_after_question-005",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: Como você reage quando uma estimativa muda?",
+      "Candidato: A primeira etapa seria confirmar o impacto."
+    ],
+    "expectedQuestion": "Como você reage quando uma estimativa muda?"
+  },
+  {
+    "id": "candidate_after_question-006",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Qual abordagem você usa para investigar uma falha?",
+      "Eu buscaria uma alternativa reversível."
+    ],
+    "expectedQuestion": "Qual abordagem você usa para investigar uma falha?"
+  },
+  {
+    "id": "candidate_after_question-007",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: Como você garante clareza em decisões técnicas?",
+      "Candidato: Depois eu compartilharia o resultado com a equipe."
+    ],
+    "expectedQuestion": "Como você garante clareza em decisões técnicas?"
+  },
+  {
+    "id": "candidate_after_question-008",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "O que faz quando recebe requisitos incompletos?",
+      "Eu separaria fatos, hipóteses e próximos testes."
+    ],
+    "expectedQuestion": "O que faz quando recebe requisitos incompletos?"
+  },
+  {
+    "id": "candidate_after_question-009",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: Como você acompanha a qualidade de uma entrega?",
+      "Candidato: A experiência me ensinou a validar antes de ampliar."
+    ],
+    "expectedQuestion": "Como você acompanha a qualidade de uma entrega?"
+  },
+  {
+    "id": "candidate_after_question-010",
+    "category": "candidate_after_question",
+    "description": "Pergunta pontuada seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "Eu acompanharia os indicadores após a mudança."
+    ],
+    "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?"
+  },
+  {
+    "id": "candidate_after_question-011",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: qual é sua estratégia para aprender um sistema existente",
+      "Candidato: Eu começaria reunindo os sinais disponíveis."
+    ],
+    "expectedQuestion": "qual é sua estratégia para aprender um sistema existente"
+  },
+  {
+    "id": "candidate_after_question-012",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "como você atua quando falta contexto",
+      "Nesse caso eu alinharia primeiro o objetivo."
+    ],
+    "expectedQuestion": "como você atua quando falta contexto"
+  },
+  {
+    "id": "candidate_after_question-013",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: me explique como você valida uma hipótese",
+      "Candidato: Minha prioridade seria reduzir o risco imediato."
+    ],
+    "expectedQuestion": "me explique como você valida uma hipótese"
+  },
+  {
+    "id": "candidate_after_question-014",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "o que você busca em uma parceria de trabalho",
+      "Eu registraria a decisão e os critérios usados."
+    ],
+    "expectedQuestion": "o que você busca em uma parceria de trabalho"
+  },
+  {
+    "id": "candidate_after_question-015",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: como você acompanha uma entrega depois da publicação",
+      "Candidato: A primeira etapa seria confirmar o impacto."
+    ],
+    "expectedQuestion": "como você acompanha uma entrega depois da publicação"
+  },
+  {
+    "id": "candidate_after_question-016",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "como você lida com prioridades concorrentes",
+      "Eu buscaria uma alternativa reversível."
+    ],
+    "expectedQuestion": "como você lida com prioridades concorrentes"
+  },
+  {
+    "id": "candidate_after_question-017",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: me explique sua forma de investigar incidentes",
+      "Candidato: Depois eu compartilharia o resultado com a equipe."
+    ],
+    "expectedQuestion": "me explique sua forma de investigar incidentes"
+  },
+  {
+    "id": "candidate_after_question-018",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "qual foi seu maior aprendizado recente",
+      "Eu separaria fatos, hipóteses e próximos testes."
+    ],
+    "expectedQuestion": "qual foi seu maior aprendizado recente"
+  },
+  {
+    "id": "candidate_after_question-019",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "Entrevistador: como você comunica uma decisão impopular",
+      "Candidato: A experiência me ensinou a validar antes de ampliar."
+    ],
+    "expectedQuestion": "como você comunica uma decisão impopular"
+  },
+  {
+    "id": "candidate_after_question-020",
+    "category": "candidate_after_question",
+    "description": "Pergunta sem pontuação seguida pela resposta parcial do candidato.",
+    "chunks": [
+      "o que você faz diante de um requisito ambíguo",
+      "Eu acompanharia os indicadores após a mudança."
+    ],
+    "expectedQuestion": "o que você faz diante de um requisito ambíguo"
+  },
+  {
+    "id": "noise-001",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "[ruído breve]",
+      "Entrevistador: Como você organiza prioridades em uma semana intensa?"
+    ],
+    "expectedQuestion": "Como você organiza prioridades em uma semana intensa?"
+  },
+  {
+    "id": "noise-002",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "[ruído breve]",
+      "Qual foi o principal aprendizado de um projeto difícil?"
+    ],
+    "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?"
+  },
+  {
+    "id": "noise-003",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "[ruído breve]",
+      "Entrevistador: Como você comunica um risco técnico para outras áreas?"
+    ],
+    "expectedQuestion": "Como você comunica um risco técnico para outras áreas?"
+  },
+  {
+    "id": "noise-004",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "[ruído breve]",
+      "O que você considera ao revisar uma solução?"
+    ],
+    "expectedQuestion": "O que você considera ao revisar uma solução?"
+  },
+  {
+    "id": "noise-005",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "[ruído breve]",
+      "Entrevistador: Como você reage quando uma estimativa muda?"
+    ],
+    "expectedQuestion": "Como você reage quando uma estimativa muda?"
+  },
+  {
+    "id": "noise-006",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Qual abordagem você usa para investigar uma falha",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Qual abordagem você usa para investigar uma falha?"
+  },
+  {
+    "id": "noise-007",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Entrevistador: Como você garante clareza em decisões técnicas",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Como você garante clareza em decisões técnicas?"
+  },
+  {
+    "id": "noise-008",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "O que faz quando recebe requisitos incompletos",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "O que faz quando recebe requisitos incompletos?"
+  },
+  {
+    "id": "noise-009",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Entrevistador: Como você acompanha a qualidade de uma entrega",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Como você acompanha a qualidade de uma entrega?"
+  },
+  {
+    "id": "noise-010",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Qual é sua forma de colaborar com pessoas de outras áreas",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?"
+  },
+  {
+    "id": "noise-011",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Entrevistador: Como você decide entre velocidade e manutenção",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Como você decide entre velocidade e manutenção?"
+  },
+  {
+    "id": "noise-012",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "O que você aprendeu ao trabalhar com sistemas legados",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?"
+  },
+  {
+    "id": "noise-013",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Entrevistador: Como você conduz uma conversa sobre divergências",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Como você conduz uma conversa sobre divergências?"
+  },
+  {
+    "id": "noise-014",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Qual foi uma decisão técnica que você reconsiderou",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?"
+  },
+  {
+    "id": "noise-015",
+    "category": "noise",
+    "description": "Pergunta acompanhada por ruído ou fragmento de transcrição.",
+    "chunks": [
+      "Entrevistador: Como você estrutura uma investigação de desempenho",
+      "[inaudível] certo certo"
+    ],
+    "expectedQuestion": "Como você estrutura uma investigação de desempenho?"
+  },
+  {
+    "id": "no_question-001",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 1.",
+      "Candidato: Eu começaria reunindo os sinais disponíveis."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-002",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Vamos seguir para o próximo tópico 2.",
+      "Nesse caso eu alinharia primeiro o objetivo."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-003",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 3.",
+      "Candidato: Minha prioridade seria reduzir o risco imediato."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-004",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Vamos seguir para o próximo tópico 4.",
+      "Eu registraria a decisão e os critérios usados."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-005",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 5.",
+      "Candidato: A primeira etapa seria confirmar o impacto."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-006",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Vamos seguir para o próximo tópico 6.",
+      "Eu buscaria uma alternativa reversível."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-007",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 7.",
+      "Candidato: Depois eu compartilharia o resultado com a equipe."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-008",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Vamos seguir para o próximo tópico 8.",
+      "Eu separaria fatos, hipóteses e próximos testes."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-009",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 9.",
+      "Candidato: A experiência me ensinou a validar antes de ampliar."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-010",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Vamos seguir para o próximo tópico 10.",
+      "Eu acompanharia os indicadores após a mudança."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-011",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 11.",
+      "Candidato: Eu começaria reunindo os sinais disponíveis."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-012",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Vamos seguir para o próximo tópico 12.",
+      "Nesse caso eu alinharia primeiro o objetivo."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-013",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 13.",
+      "Candidato: Minha prioridade seria reduzir o risco imediato."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-014",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Vamos seguir para o próximo tópico 14.",
+      "Eu registraria a decisão e os critérios usados."
+    ],
+    "expectedQuestion": null
+  },
+  {
+    "id": "no_question-015",
+    "category": "no_question",
+    "description": "Trecho declarativo sem pergunta ou solicitação ao candidato.",
+    "chunks": [
+      "Entrevistador: Vamos seguir para o próximo tópico 15.",
+      "Candidato: A primeira etapa seria confirmar o impacto."
+    ],
+    "expectedQuestion": null
+  }
+]

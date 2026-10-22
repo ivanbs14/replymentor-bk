@@ -1,0 +1,367 @@
+{
+  "detectorVersion": "current-v1",
+  "corpusSize": 120,
+  "metrics": {
+    "exactAccuracy": 0.5666666666666667,
+    "correct": 68,
+    "precision": 0.875,
+    "recall": 1,
+    "f1": 0.9333333333333333,
+    "truePositive": 105,
+    "falsePositive": 15,
+    "falseNegative": 0,
+    "trueNegative": 0,
+    "latencyP95Ms": 0.0004289999999969041
+  },
+  "categories": {
+    "explicit_question_mark": {
+      "total": 20,
+      "correct": 20,
+      "accuracy": 1
+    },
+    "without_punctuation": {
+      "total": 20,
+      "correct": 10,
+      "accuracy": 0.5
+    },
+    "implicit_question": {
+      "total": 15,
+      "correct": 15,
+      "accuracy": 1
+    },
+    "multiple_questions": {
+      "total": 15,
+      "correct": 8,
+      "accuracy": 0.5333333333333333
+    },
+    "candidate_after_question": {
+      "total": 20,
+      "correct": 10,
+      "accuracy": 0.5
+    },
+    "noise": {
+      "total": 15,
+      "correct": 5,
+      "accuracy": 0.3333333333333333
+    },
+    "no_question": {
+      "total": 15,
+      "correct": 0,
+      "accuracy": 0
+    }
+  },
+  "failures": [
+    {
+      "id": "without_punctuation-011",
+      "category": "without_punctuation",
+      "expectedQuestion": "qual foi uma situação em que precisou negociar escopo",
+      "predictedQuestion": "Candidato: Eu começaria reunindo os sinais disponíveis."
+    },
+    {
+      "id": "without_punctuation-012",
+      "category": "without_punctuation",
+      "expectedQuestion": "como você identifica a causa de uma regressão",
+      "predictedQuestion": "Nesse caso eu alinharia primeiro o objetivo."
+    },
+    {
+      "id": "without_punctuation-013",
+      "category": "without_punctuation",
+      "expectedQuestion": "me conte como você melhora um processo da equipe",
+      "predictedQuestion": "Candidato: Minha prioridade seria reduzir o risco imediato."
+    },
+    {
+      "id": "without_punctuation-014",
+      "category": "without_punctuation",
+      "expectedQuestion": "o que você faria diante de métricas contraditórias",
+      "predictedQuestion": "Eu registraria a decisão e os critérios usados."
+    },
+    {
+      "id": "without_punctuation-015",
+      "category": "without_punctuation",
+      "expectedQuestion": "como você documenta uma decisão importante",
+      "predictedQuestion": "Candidato: A primeira etapa seria confirmar o impacto."
+    },
+    {
+      "id": "without_punctuation-016",
+      "category": "without_punctuation",
+      "expectedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "predictedQuestion": "Eu buscaria uma alternativa reversível."
+    },
+    {
+      "id": "without_punctuation-017",
+      "category": "without_punctuation",
+      "expectedQuestion": "como você atua quando falta contexto",
+      "predictedQuestion": "Candidato: Depois eu compartilharia o resultado com a equipe."
+    },
+    {
+      "id": "without_punctuation-018",
+      "category": "without_punctuation",
+      "expectedQuestion": "me explique como você valida uma hipótese",
+      "predictedQuestion": "Eu separaria fatos, hipóteses e próximos testes."
+    },
+    {
+      "id": "without_punctuation-019",
+      "category": "without_punctuation",
+      "expectedQuestion": "o que você busca em uma parceria de trabalho",
+      "predictedQuestion": "Candidato: A experiência me ensinou a validar antes de ampliar."
+    },
+    {
+      "id": "without_punctuation-020",
+      "category": "without_punctuation",
+      "expectedQuestion": "como você acompanha uma entrega depois da publicação",
+      "predictedQuestion": "Eu acompanharia os indicadores após a mudança."
+    },
+    {
+      "id": "multiple_questions-002",
+      "category": "multiple_questions",
+      "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "predictedQuestion": "Como você garante clareza em decisões técnicas? Qual foi o principal aprendizado de um projeto difícil?"
+    },
+    {
+      "id": "multiple_questions-004",
+      "category": "multiple_questions",
+      "expectedQuestion": "O que você considera ao revisar uma solução?",
+      "predictedQuestion": "Como você acompanha a qualidade de uma entrega? O que você considera ao revisar uma solução?"
+    },
+    {
+      "id": "multiple_questions-006",
+      "category": "multiple_questions",
+      "expectedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "predictedQuestion": "Como você decide entre velocidade e manutenção? Qual abordagem você usa para investigar uma falha?"
+    },
+    {
+      "id": "multiple_questions-008",
+      "category": "multiple_questions",
+      "expectedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "predictedQuestion": "Como você conduz uma conversa sobre divergências? O que faz quando recebe requisitos incompletos?"
+    },
+    {
+      "id": "multiple_questions-010",
+      "category": "multiple_questions",
+      "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "predictedQuestion": "Como você estrutura uma investigação de desempenho? Qual é sua forma de colaborar com pessoas de outras áreas?"
+    },
+    {
+      "id": "multiple_questions-012",
+      "category": "multiple_questions",
+      "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "predictedQuestion": "Como você compartilha conhecimento com a equipe? O que você aprendeu ao trabalhar com sistemas legados?"
+    },
+    {
+      "id": "multiple_questions-014",
+      "category": "multiple_questions",
+      "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "predictedQuestion": "Como você mede se uma solução resolveu o problema? Qual foi uma decisão técnica que você reconsiderou?"
+    },
+    {
+      "id": "candidate_after_question-011",
+      "category": "candidate_after_question",
+      "expectedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "predictedQuestion": "Candidato: Eu começaria reunindo os sinais disponíveis."
+    },
+    {
+      "id": "candidate_after_question-012",
+      "category": "candidate_after_question",
+      "expectedQuestion": "como você atua quando falta contexto",
+      "predictedQuestion": "Nesse caso eu alinharia primeiro o objetivo."
+    },
+    {
+      "id": "candidate_after_question-013",
+      "category": "candidate_after_question",
+      "expectedQuestion": "me explique como você valida uma hipótese",
+      "predictedQuestion": "Candidato: Minha prioridade seria reduzir o risco imediato."
+    },
+    {
+      "id": "candidate_after_question-014",
+      "category": "candidate_after_question",
+      "expectedQuestion": "o que você busca em uma parceria de trabalho",
+      "predictedQuestion": "Eu registraria a decisão e os critérios usados."
+    },
+    {
+      "id": "candidate_after_question-015",
+      "category": "candidate_after_question",
+      "expectedQuestion": "como você acompanha uma entrega depois da publicação",
+      "predictedQuestion": "Candidato: A primeira etapa seria confirmar o impacto."
+    },
+    {
+      "id": "candidate_after_question-016",
+      "category": "candidate_after_question",
+      "expectedQuestion": "como você lida com prioridades concorrentes",
+      "predictedQuestion": "Eu buscaria uma alternativa reversível."
+    },
+    {
+      "id": "candidate_after_question-017",
+      "category": "candidate_after_question",
+      "expectedQuestion": "me explique sua forma de investigar incidentes",
+      "predictedQuestion": "Candidato: Depois eu compartilharia o resultado com a equipe."
+    },
+    {
+      "id": "candidate_after_question-018",
+      "category": "candidate_after_question",
+      "expectedQuestion": "qual foi seu maior aprendizado recente",
+      "predictedQuestion": "Eu separaria fatos, hipóteses e próximos testes."
+    },
+    {
+      "id": "candidate_after_question-019",
+      "category": "candidate_after_question",
+      "expectedQuestion": "como você comunica uma decisão impopular",
+      "predictedQuestion": "Candidato: A experiência me ensinou a validar antes de ampliar."
+    },
+    {
+      "id": "candidate_after_question-020",
+      "category": "candidate_after_question",
+      "expectedQuestion": "o que você faz diante de um requisito ambíguo",
+      "predictedQuestion": "Eu acompanharia os indicadores após a mudança."
+    },
+    {
+      "id": "noise-006",
+      "category": "noise",
+      "expectedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-007",
+      "category": "noise",
+      "expectedQuestion": "Como você garante clareza em decisões técnicas?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-008",
+      "category": "noise",
+      "expectedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-009",
+      "category": "noise",
+      "expectedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-010",
+      "category": "noise",
+      "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-011",
+      "category": "noise",
+      "expectedQuestion": "Como você decide entre velocidade e manutenção?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-012",
+      "category": "noise",
+      "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-013",
+      "category": "noise",
+      "expectedQuestion": "Como você conduz uma conversa sobre divergências?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-014",
+      "category": "noise",
+      "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "noise-015",
+      "category": "noise",
+      "expectedQuestion": "Como você estrutura uma investigação de desempenho?",
+      "predictedQuestion": "[inaudível] certo certo"
+    },
+    {
+      "id": "no_question-001",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: Eu começaria reunindo os sinais disponíveis."
+    },
+    {
+      "id": "no_question-002",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Nesse caso eu alinharia primeiro o objetivo."
+    },
+    {
+      "id": "no_question-003",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: Minha prioridade seria reduzir o risco imediato."
+    },
+    {
+      "id": "no_question-004",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Eu registraria a decisão e os critérios usados."
+    },
+    {
+      "id": "no_question-005",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: A primeira etapa seria confirmar o impacto."
+    },
+    {
+      "id": "no_question-006",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Eu buscaria uma alternativa reversível."
+    },
+    {
+      "id": "no_question-007",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: Depois eu compartilharia o resultado com a equipe."
+    },
+    {
+      "id": "no_question-008",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Eu separaria fatos, hipóteses e próximos testes."
+    },
+    {
+      "id": "no_question-009",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: A experiência me ensinou a validar antes de ampliar."
+    },
+    {
+      "id": "no_question-010",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Eu acompanharia os indicadores após a mudança."
+    },
+    {
+      "id": "no_question-011",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: Eu começaria reunindo os sinais disponíveis."
+    },
+    {
+      "id": "no_question-012",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Nesse caso eu alinharia primeiro o objetivo."
+    },
+    {
+      "id": "no_question-013",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: Minha prioridade seria reduzir o risco imediato."
+    },
+    {
+      "id": "no_question-014",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Eu registraria a decisão e os critérios usados."
+    },
+    {
+      "id": "no_question-015",
+      "category": "no_question",
+      "expectedQuestion": null,
+      "predictedQuestion": "Candidato: A primeira etapa seria confirmar o impacto."
+    }
+  ]
+}
