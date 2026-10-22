@@ -18,9 +18,11 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    "test:cov": "npm run test:cov:auth && npm run test:cov:domain",
+    "test:cov:auth": "jest --config ./test/jest-auth-coverage.json --coverage --runInBand --no-watchman",
+    "test:cov:domain": "jest --config ./test/jest-critical.json --coverage --runInBand --no-watchman",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./test/jest-e2e.json --no-watchman test/app.e2e-spec.ts",
     "test:session:integration": "bash scripts/test-session-integration.sh"
   },
   "dependencies": {

@@ -17,4 +17,5 @@ fi
 
 export DATABASE_URL="$DATABASE_URL_TEST"
 npx prisma migrate deploy
-npm run test:e2e -- --runInBand --no-watchman test/session-integrity.e2e-spec.ts
+npm run test:e2e -- --runInBand --no-watchman \
+  test/session-integrity.e2e-spec.ts test/contracts.e2e-spec.ts
