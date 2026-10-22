@@ -1,0 +1,22 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/src/auth/**/*.spec.ts"],
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "collectCoverageFrom": [
+    "src/auth/**/*.ts",
+    "!src/**/*.spec.ts"
+  ],
+  "coverageDirectory": "coverage/auth",
+  "coverageThreshold": {
+    "global": {
+      "statements": 90,
+      "branches": 75,
+      "functions": 90,
+      "lines": 90
+    }
+  }
+}

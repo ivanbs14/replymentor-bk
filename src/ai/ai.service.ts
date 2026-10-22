@@ -1,4 +1,15 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  PayloadTooLargeException,
+} from '@nestjs/common';
+import {
+  ProviderBadGatewayException,
+  ProviderTimeoutException,
+  ProviderUnavailableException,
+} from '../common/api-exception.filter';
+import { MAX_AUDIO_BYTES, MAX_TRANSCRIPT_CHARS } from '../common/api-contract';
 import type {
   CreateInterviewContextDto,
   LlmProvider,
@@ -58,6 +69,12 @@ export class AiService {
   private readonly whisperModel =
     process.env.WHISPER_MODEL ?? 'Systran/faster-whisper-large-v3';
   private readonly whisperApiKey = process.env.WHISPER_API_KEY;
+  private readonly sttTimeoutMs = this.readTimeout(
+    'STT_TIMEOUT_MS',
+    60_000,
+    5_000,
+    120_000,
+  );
 
   private readonly maxResumeChars = 1800;
   private readonly maxJobDescriptionChars = 1200;
@@ -84,46 +101,87 @@ export class AiService {
     }
 
     const mimeType = input.mimeType ?? 'audio/webm';
-    const file = new Blob([Buffer.from(input.audioBase64, 'base64')], {
+    const audio = Buffer.from(input.audioBase64, 'base64');
+    if (audio.byteLength > MAX_AUDIO_BYTES) {
+      throw new PayloadTooLargeException('Áudio excede o limite permitido.');
+    }
+    const file = new Blob([audio], {
       type: mimeType,
     });
     const formData = new FormData();
-    formData.append('file', file, 'chunk.webm');
+    formData.append('file', file, `chunk.${this.audioExtension(mimeType)}`);
     formData.append('model', this.whisperModel);
 
-    const response = await fetch(
-      `${this.whisperBaseUrl.replace(/\/$/, '')}/v1/audio/transcriptions`,
-      {
-        method: 'POST',
-        headers: this.whisperApiKey
-          ? { Authorization: `Bearer ${this.whisperApiKey}` }
-          : undefined,
-        body: formData,
-      },
-    );
+    const startedAt = Date.now();
+    let response: Response;
+    try {
+      response = await fetch(
+        `${this.whisperBaseUrl.replace(/\/$/, '')}/v1/audio/transcriptions`,
+        {
+          method: 'POST',
+          headers: this.whisperApiKey
+            ? { Authorization: `Bearer ${this.whisperApiKey}` }
+            : undefined,
+          body: formData,
+          signal: AbortSignal.timeout(this.sttTimeoutMs),
+        },
+      );
+    } catch (error) {
+      const durationMs = Date.now() - startedAt;
+      if (
+        error instanceof Error &&
+        ['TimeoutError', 'AbortError'].includes(error.name)
+      ) {
+        this.logger.warn(
+          `provider=stt outcome=timeout durationMs=${durationMs}`,
+        );
+        throw new ProviderTimeoutException();
+      }
+      this.logger.warn(
+        `provider=stt outcome=network_error durationMs=${durationMs}`,
+      );
+      throw new ProviderUnavailableException();
+    }
 
     if (!response.ok) {
-      const body = await response.text();
-      throw new BadRequestException(
-        `Falha na transcrição via Whisper/faster-whisper: ${body}`,
+      this.logger.warn(
+        `provider=stt outcome=http_error status=${response.status} durationMs=${Date.now() - startedAt}`,
       );
+      throw new ProviderBadGatewayException();
     }
 
-    const data = (await response.json()) as { text?: string };
-    if (!data.text || !data.text.trim()) {
-      throw new BadRequestException(
-        'Transcrição vazia retornada pelo provedor STT.',
+    let data: unknown;
+    try {
+      data = await response.json();
+    } catch {
+      this.logger.warn(
+        `provider=stt outcome=invalid_json durationMs=${Date.now() - startedAt}`,
       );
+      throw new ProviderBadGatewayException();
+    }
+    const text =
+      typeof data === 'object' &&
+      data !== null &&
+      typeof Reflect.get(data, 'text') === 'string'
+        ? (Reflect.get(data, 'text') as string).trim()
+        : '';
+    if (!text || text.length > MAX_TRANSCRIPT_CHARS) {
+      this.logger.warn(
+        `provider=stt outcome=invalid_response durationMs=${Date.now() - startedAt}`,
+      );
+      throw new ProviderBadGatewayException();
     }
 
-    return data.text.trim();
+    return text;
   }
 
   async generateSuggestedAnswer(
     input: GenerateInput,
   ): Promise<SuggestedAnswerPayload> {
-    const provider = this.resolveProvider(input.provider);
-    const model = this.resolveModel(provider, input.model);
+    const { provider, model } = this.resolveGenerationTarget(
+      input.provider,
+      input.model,
+    );
     const prompt = this.buildPrompt(input);
 
     let outputText: string;
@@ -137,15 +195,19 @@ export class AiService {
 
     const parsed = this.parseSuggestedAnswer(outputText);
     if (!parsed) {
-      this.logger.error(
-        `${provider} retornou JSON inválido para o contrato esperado. output=${this.truncate(outputText)}`,
-      );
-      throw new BadRequestException(
-        `${provider} retornou resposta em formato inválido para o contrato esperado.`,
-      );
+      this.logger.error(`provider=${provider} outcome=invalid_contract`);
+      throw new ProviderBadGatewayException();
     }
 
     return parsed;
+  }
+
+  resolveGenerationTarget(provider?: LlmProvider, model?: string) {
+    const resolvedProvider = this.resolveProvider(provider);
+    return {
+      provider: resolvedProvider,
+      model: this.resolveModel(resolvedProvider, model),
+    };
   }
 
   private async generateWithGemini(
@@ -154,9 +216,7 @@ export class AiService {
   ): Promise<string> {
     if (!this.geminiApiKey) {
       this.logger.error('GEMINI_API_KEY não configurada.');
-      throw new BadRequestException(
-        'LLM indisponível: GEMINI_API_KEY não configurada no backend.',
-      );
+      throw new ProviderUnavailableException();
     }
 
     const endpoint =
@@ -187,34 +247,30 @@ export class AiService {
     } catch (error) {
       if (error instanceof Error && error.name === 'TimeoutError') {
         this.logger.error(`Timeout ao chamar Gemini (${this.llmTimeoutMs}ms).`);
-        throw new BadRequestException(
-          `Gemini excedeu tempo limite de ${this.llmTimeoutMs}ms.`,
-        );
+        throw new ProviderTimeoutException();
       }
-      this.logger.error('Erro de rede ao chamar Gemini.', error);
-      throw new BadRequestException(
-        'Falha ao comunicar com Gemini. Verifique conexão e configuração.',
-      );
+      this.logger.error('provider=gemini outcome=network_error');
+      throw new ProviderUnavailableException();
     }
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      const details = this.truncate(errorBody);
       this.logger.error(
-        `Gemini retornou erro HTTP ${response.status}. body=${details}`,
+        `provider=gemini outcome=http_error status=${response.status}`,
       );
-      throw new BadRequestException(
-        `Falha no Gemini (${response.status}): ${details || 'sem detalhes'}`,
-      );
+      throw new ProviderBadGatewayException();
     }
 
-    const data = (await response.json()) as GeminiResponse;
+    let data: GeminiResponse;
+    try {
+      data = (await response.json()) as GeminiResponse;
+    } catch {
+      this.logger.error('provider=gemini outcome=invalid_json');
+      throw new ProviderBadGatewayException();
+    }
     const outputText = this.extractGeminiText(data);
     if (!outputText) {
       this.logger.error('Gemini retornou conteúdo vazio.');
-      throw new BadRequestException(
-        'Gemini retornou conteúdo vazio. Tente novamente.',
-      );
+      throw new ProviderBadGatewayException();
     }
 
     return outputText;
@@ -226,9 +282,7 @@ export class AiService {
   ): Promise<string> {
     if (!this.openAiApiKey) {
       this.logger.error('OPENAI_API_KEY não configurada.');
-      throw new BadRequestException(
-        'LLM indisponível: OPENAI_API_KEY não configurada no backend.',
-      );
+      throw new ProviderUnavailableException();
     }
 
     return this.generateWithOpenAiCompatible({
@@ -293,37 +347,34 @@ export class AiService {
         this.logger.error(
           `Timeout ao chamar ${input.providerLabel} (${this.llmTimeoutMs}ms).`,
         );
-        throw new BadRequestException(
-          `${input.providerLabel} excedeu tempo limite de ${this.llmTimeoutMs}ms.`,
-        );
+        throw new ProviderTimeoutException();
       }
       this.logger.error(
-        `Erro de rede ao chamar ${input.providerLabel}.`,
-        error,
+        `provider=${input.providerLabel.toLowerCase()} outcome=network_error`,
       );
-      throw new BadRequestException(
-        `Falha ao comunicar com ${input.providerLabel}. Verifique conexão e configuração.`,
-      );
+      throw new ProviderUnavailableException();
     }
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      const details = this.truncate(errorBody);
       this.logger.error(
-        `${input.providerLabel} retornou erro HTTP ${response.status}. body=${details}`,
+        `provider=${input.providerLabel.toLowerCase()} outcome=http_error status=${response.status}`,
       );
-      throw new BadRequestException(
-        `Falha no ${input.providerLabel} (${response.status}): ${details || 'sem detalhes'}`,
-      );
+      throw new ProviderBadGatewayException();
     }
 
-    const data = (await response.json()) as OpenAiCompatibleResponse;
+    let data: OpenAiCompatibleResponse;
+    try {
+      data = (await response.json()) as OpenAiCompatibleResponse;
+    } catch {
+      this.logger.error(
+        `provider=${input.providerLabel.toLowerCase()} outcome=invalid_json`,
+      );
+      throw new ProviderBadGatewayException();
+    }
     const outputText = data.choices?.[0]?.message?.content?.trim();
     if (!outputText) {
       this.logger.error(`${input.providerLabel} retornou conteúdo vazio.`);
-      throw new BadRequestException(
-        `${input.providerLabel} retornou conteúdo vazio. Tente novamente.`,
-      );
+      throw new ProviderBadGatewayException();
     }
 
     return outputText;
@@ -577,10 +628,28 @@ export class AiService {
     return null;
   }
 
-  private truncate(value: string, max = 400): string {
-    const text = value.trim();
-    if (text.length <= max) return text;
-    return `${text.slice(0, max)}...`;
+  private readTimeout(
+    name: string,
+    fallback: number,
+    min: number,
+    max: number,
+  ): number {
+    const raw = process.env[name]?.trim();
+    if (!raw) return fallback;
+    if (!/^\d+$/.test(raw))
+      throw new Error(`${name} deve ser um inteiro entre ${min} e ${max}.`);
+    const value = Number(raw);
+    if (value < min || value > max)
+      throw new Error(`${name} deve estar entre ${min} e ${max}.`);
+    return value;
+  }
+
+  private audioExtension(mimeType: string): string {
+    if (mimeType === 'audio/ogg') return 'ogg';
+    if (mimeType === 'audio/mp4') return 'mp4';
+    if (mimeType === 'audio/mpeg') return 'mp3';
+    if (mimeType === 'audio/wav') return 'wav';
+    return 'webm';
   }
 
   private compactText(value: string, max: number): string {

@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Req, Post } from '@nestjs/common';
-import type { Request } from 'express';
+import { Body, Controller, Get, Req, Post, Res } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import type { AuthPayload } from './auth.types';
+import { AUTH_COOKIE_NAME, AuthConfigService } from './auth-config.service';
+import { AuthDto } from './dto/auth.dto';
 import { Public } from './public.decorator';
 
 type AuthenticatedRequest = Request & {
@@ -10,18 +11,41 @@ type AuthenticatedRequest = Request & {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authConfig: AuthConfigService,
+  ) {}
 
   @Public()
   @Post('register')
-  register(@Body() payload: AuthPayload) {
-    return this.authService.register(payload);
+  async register(
+    @Body() payload: AuthDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { token, user } = await this.authService.register(payload);
+    response.cookie(AUTH_COOKIE_NAME, token, this.authConfig.cookieOptions());
+    return { user };
   }
 
   @Public()
   @Post('login')
-  login(@Body() payload: AuthPayload) {
-    return this.authService.login(payload);
+  async login(
+    @Body() payload: AuthDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { token, user } = await this.authService.login(payload);
+    response.cookie(AUTH_COOKIE_NAME, token, this.authConfig.cookieOptions());
+    return { user };
+  }
+
+  @Public()
+  @Post('logout')
+  logout(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie(
+      AUTH_COOKIE_NAME,
+      this.authConfig.clearCookieOptions(),
+    );
+    return { success: true };
   }
 
   @Get('me')

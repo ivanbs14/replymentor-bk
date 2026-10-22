@@ -1,0 +1,14 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: replymentor_test
+      POSTGRES_PASSWORD: replymentor_test
+      POSTGRES_DB: replymentor_test
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U replymentor_test -d replymentor_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
