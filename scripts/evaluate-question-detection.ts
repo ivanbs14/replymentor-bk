@@ -99,6 +99,24 @@ const categories = Object.fromEntries(
     ];
   }),
 );
+const confidenceBands = {
+  direct: evaluations.filter((item) => item.confidence >= 0.85).length,
+  ambiguous: evaluations.filter(
+    (item) => item.confidence >= 0.5 && item.confidence < 0.85,
+  ).length,
+  notFound: evaluations.filter((item) => item.confidence < 0.5).length,
+  ambiguousByCategory: Object.fromEntries(
+    [...new Set(evaluations.map((item) => item.category))].map((category) => [
+      category,
+      evaluations.filter(
+        (item) =>
+          item.category === category &&
+          item.confidence >= 0.5 &&
+          item.confidence < 0.85,
+      ).length,
+    ]),
+  ),
+};
 
 const report = {
   detectorVersion: DETERMINISTIC_QUESTION_DETECTOR_VERSION,
@@ -121,6 +139,7 @@ const report = {
     falseNegative,
     trueNegative,
   },
+  confidenceBands,
   categories,
   failures: evaluations
     .filter((item) => !item.correct)

@@ -11,13 +11,27 @@
     "falsePositive": 0,
     "falseNegative": 0,
     "trueNegative": 15,
-    "latencyP95Ms": 0.01240199999995184
+    "latencyP95Ms": 0.011940999999978885
   },
   "confusionMatrix": {
     "truePositive": 105,
     "falsePositive": 0,
     "falseNegative": 0,
     "trueNegative": 15
+  },
+  "confidenceBands": {
+    "direct": 78,
+    "ambiguous": 27,
+    "notFound": 15,
+    "ambiguousByCategory": {
+      "explicit_question_mark": 0,
+      "without_punctuation": 10,
+      "implicit_question": 7,
+      "multiple_questions": 0,
+      "candidate_after_question": 5,
+      "noise": 5,
+      "no_question": 0
+    }
   },
   "categories": {
     "explicit_question_mark": {
