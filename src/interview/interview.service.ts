@@ -26,6 +26,10 @@ import type {
   GenerateResponseResult,
   QuestionDetectionEvidence,
 } from './question-detection.types';
+import {
+  DETERMINISTIC_QUESTION_DETECTOR_VERSION,
+  detectLatestQuestion,
+} from './question-detection/deterministic-question-detector';
 
 type LockedSession = {
   id: string;
@@ -36,6 +40,10 @@ type LockedSession = {
 @Injectable()
 export class InterviewService {
   private readonly maxChunksForGeneration = 8;
+  private readonly generationInFlight = new Map<
+    string,
+    { fingerprint: string; promise: Promise<GenerateResponseResult> }
+  >();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -231,88 +239,167 @@ export class InterviewService {
       );
       return this.toGenerationResult(existing);
     }
-    this.assertActive(session.status);
-
-    const latestChunks = await this.prisma.transcriptChunk.findMany({
-      where: { sessionId },
-      orderBy: { sequence: 'desc' },
-      take: this.maxChunksForGeneration,
-    });
-    if (latestChunks.length === 0) {
-      throw new BadRequestException('Não há transcrição para gerar resposta.');
+    const inFlightKey = `${sessionId}:${idempotencyKey}`;
+    const activeGeneration = this.generationInFlight.get(inFlightKey);
+    if (activeGeneration) {
+      this.assertMatchingFingerprint(
+        activeGeneration.fingerprint,
+        requestFingerprint,
+      );
+      return activeGeneration.promise;
     }
 
-    const chunks = latestChunks.reverse();
-    const transcriptWindow = chunks.map((item) => item.content).join('\n');
-    const detectedQuestion =
-      payload.forceQuestion?.trim() ??
-      this.detectLatestQuestion(transcriptWindow) ??
-      'Pode resumir sua experiência para essa vaga?';
+    const promise = (async (): Promise<GenerateResponseResult> => {
+      this.assertActive(session.status);
 
-    const generated = await this.ai.generateSuggestedAnswer({
-      context: {
-        resumeText: session.context.resumeText,
-        interviewType: session.context.interviewType,
-        jobLevel: session.context.jobLevel,
-        jobDescription: session.context.jobDescription,
-        companyName: session.context.companyName,
-        companySegment: session.context.companySegment ?? undefined,
-        responsePreference: session.context.responsePreference,
-        aiBehavior: session.context.aiBehavior ?? undefined,
-      },
-      detectedQuestion,
-      transcriptWindow,
-      provider: target.provider,
-      model: target.model,
-    });
-
-    const saved = await this.prisma.$transaction(async (tx) => {
-      const locked = await this.lockOwnedSession(tx, userId, sessionId);
-      const replay = await tx.questionDetection.findFirst({
-        where: { sessionId, idempotencyKey },
-        include: { response: true },
+      const latestChunks = await this.prisma.transcriptChunk.findMany({
+        where: { sessionId },
+        orderBy: { sequence: 'desc' },
+        take: this.maxChunksForGeneration,
       });
-      if (replay) {
-        this.assertMatchingFingerprint(
-          replay.requestFingerprint,
-          requestFingerprint,
+      if (latestChunks.length === 0) {
+        throw new BadRequestException(
+          'Não há transcrição para gerar resposta.',
         );
-        return replay;
       }
-      this.assertActive(locked.status);
 
-      const detection = await tx.questionDetection.create({
-        data: {
-          sessionId,
-          status: QuestionDetectionStatus.DETECTED,
-          question: detectedQuestion,
-          confidence: null,
-          source: payload.forceQuestion
-            ? QuestionDetectionSource.MANUAL
-            : QuestionDetectionSource.LEGACY,
-          detectorVersion: payload.forceQuestion ? 'manual-v1' : 'legacy-v1',
-          evidence: this.buildDetectionEvidence(chunks, detectedQuestion),
-          idempotencyKey,
-          requestFingerprint,
+      const chunks = latestChunks.reverse();
+      const transcriptWindow = chunks.map((item) => item.content).join('\n');
+      const forcedQuestion = payload.forceQuestion?.trim();
+      const automaticDetection = forcedQuestion
+        ? null
+        : detectLatestQuestion(
+            chunks.map(({ id, sequence, content }) => ({
+              id,
+              sequence,
+              content,
+            })),
+          );
+
+      if (automaticDetection && automaticDetection.confidence < 0.85) {
+        const saved = await this.prisma.$transaction(async (tx) => {
+          const locked = await this.lockOwnedSession(tx, userId, sessionId);
+          const replay = await tx.questionDetection.findFirst({
+            where: { sessionId, idempotencyKey },
+            include: { response: true },
+          });
+          if (replay) {
+            this.assertMatchingFingerprint(
+              replay.requestFingerprint,
+              requestFingerprint,
+            );
+            return replay;
+          }
+          this.assertActive(locked.status);
+          const detection = await tx.questionDetection.create({
+            data: {
+              sessionId,
+              status:
+                automaticDetection.status === 'DETECTED'
+                  ? QuestionDetectionStatus.DETECTED
+                  : QuestionDetectionStatus.NOT_FOUND,
+              question: automaticDetection.question,
+              confidence: automaticDetection.confidence,
+              source: QuestionDetectionSource.DETERMINISTIC,
+              detectorVersion: automaticDetection.detectorVersion,
+              evidence: automaticDetection.evidence,
+              idempotencyKey,
+              requestFingerprint,
+            },
+          });
+          return { ...detection, response: null };
+        });
+        return this.toGenerationResult(saved);
+      }
+
+      const detectedQuestion =
+        forcedQuestion ?? automaticDetection?.question ?? null;
+      if (!detectedQuestion) {
+        throw new BadRequestException(
+          'Não foi possível determinar a pergunta.',
+        );
+      }
+
+      const generated = await this.ai.generateSuggestedAnswer({
+        context: {
+          resumeText: session.context.resumeText,
+          interviewType: session.context.interviewType,
+          jobLevel: session.context.jobLevel,
+          jobDescription: session.context.jobDescription,
+          companyName: session.context.companyName,
+          companySegment: session.context.companySegment ?? undefined,
+          responsePreference: session.context.responsePreference,
+          aiBehavior: session.context.aiBehavior ?? undefined,
         },
+        detectedQuestion,
+        transcriptWindow,
+        provider: target.provider,
+        model: target.model,
       });
-      const response = await tx.suggestedResponse.create({
-        data: {
-          sessionId,
-          detectionId: detection.id,
-          detectedQuestion,
-          suggestedAnswer: generated.suggestedAnswer,
-          shortVersion: generated.shortVersion,
-          keyPoints: generated.keyPoints,
-          strategicNote: generated.strategicNote,
-          idempotencyKey,
-          requestFingerprint,
-        },
+
+      const saved = await this.prisma.$transaction(async (tx) => {
+        const locked = await this.lockOwnedSession(tx, userId, sessionId);
+        const replay = await tx.questionDetection.findFirst({
+          where: { sessionId, idempotencyKey },
+          include: { response: true },
+        });
+        if (replay) {
+          this.assertMatchingFingerprint(
+            replay.requestFingerprint,
+            requestFingerprint,
+          );
+          return replay;
+        }
+        this.assertActive(locked.status);
+
+        const detection = await tx.questionDetection.create({
+          data: {
+            sessionId,
+            status: QuestionDetectionStatus.DETECTED,
+            question: detectedQuestion,
+            confidence: forcedQuestion ? null : automaticDetection?.confidence,
+            source: forcedQuestion
+              ? QuestionDetectionSource.MANUAL
+              : QuestionDetectionSource.DETERMINISTIC,
+            detectorVersion: forcedQuestion
+              ? 'manual-v1'
+              : DETERMINISTIC_QUESTION_DETECTOR_VERSION,
+            evidence: forcedQuestion
+              ? []
+              : (automaticDetection?.evidence ?? []),
+            idempotencyKey,
+            requestFingerprint,
+          },
+        });
+        const response = await tx.suggestedResponse.create({
+          data: {
+            sessionId,
+            detectionId: detection.id,
+            detectedQuestion,
+            suggestedAnswer: generated.suggestedAnswer,
+            shortVersion: generated.shortVersion,
+            keyPoints: generated.keyPoints,
+            strategicNote: generated.strategicNote,
+            idempotencyKey,
+            requestFingerprint,
+          },
+        });
+        return { ...detection, response };
       });
-      return { ...detection, response };
+
+      return this.toGenerationResult(saved);
+    })();
+    this.generationInFlight.set(inFlightKey, {
+      fingerprint: requestFingerprint,
+      promise,
     });
-
-    return this.toGenerationResult(saved);
+    try {
+      return await promise;
+    } finally {
+      if (this.generationInFlight.get(inFlightKey)?.promise === promise) {
+        this.generationInFlight.delete(inFlightKey);
+      }
+    }
   }
 
   async endSession(userId: string, sessionId: string) {
@@ -366,50 +453,6 @@ export class InterviewService {
       throw new NotFoundException('Resumo da sessão não encontrado.');
     }
     return summary;
-  }
-
-  private detectLatestQuestion(transcriptWindow: string): string | null {
-    const lines = transcriptWindow
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean);
-
-    for (let i = lines.length - 1; i >= 0; i -= 1) {
-      const line = lines[i];
-      if (line.endsWith('?')) {
-        return line;
-      }
-    }
-
-    return lines.length > 0 ? lines[lines.length - 1] : null;
-  }
-
-  private buildDetectionEvidence(
-    chunks: Array<{ id?: string; sequence: number; content: string }>,
-    question: string,
-  ): QuestionDetectionEvidence[] {
-    const normalizedQuestion = question.toLocaleLowerCase('pt-BR');
-    const source = [...chunks]
-      .reverse()
-      .find((chunk) =>
-        chunk.content.toLocaleLowerCase('pt-BR').includes(normalizedQuestion),
-      );
-    if (!source?.id) return [];
-    const matchIndex = source.content
-      .toLocaleLowerCase('pt-BR')
-      .indexOf(normalizedQuestion);
-    const excerptSource =
-      matchIndex >= 0 ? source.content.slice(matchIndex) : source.content;
-    return [
-      {
-        chunkId: source.id,
-        sequence: source.sequence,
-        excerpt:
-          excerptSource.length <= 240
-            ? excerptSource
-            : `${excerptSource.slice(0, 237)}...`,
-      },
-    ];
   }
 
   private async lockOwnedSession(

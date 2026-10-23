@@ -151,9 +151,9 @@ describe('Final API + Prisma contracts', () => {
           detection: {
             status: 'DETECTED',
             question: generatedAnswer.detectedQuestion,
-            confidence: null,
-            source: 'LEGACY',
-            detectorVersion: 'legacy-v1',
+            confidence: 0.92,
+            source: 'DETERMINISTIC',
+            detectorVersion: 'deterministic-v1',
           },
           answer: generatedAnswer,
         }),

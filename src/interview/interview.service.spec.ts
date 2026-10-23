@@ -37,7 +37,7 @@ function setupSession() {
     data: {
       sessionId: string;
       status: string;
-      question: string;
+      question: string | null;
       confidence: number | null;
       source: string;
       detectorVersion: string;
@@ -343,20 +343,19 @@ describe('InterviewService isolation', () => {
     {
       chunks: [
         'Pergunta antiga?',
-        '  Como evita condições de corrida?  \nComentário final.',
+        'Como evita condições de corrida? Comentário final.',
       ],
       expected: 'Como evita condições de corrida?',
     },
     {
-      chunks: ['Apresentação inicial.', '  Último trecho sem interrogação.  '],
-      expected: 'Último trecho sem interrogação.',
-    },
-    {
-      chunks: ['   ', '\n'],
-      expected: 'Pode resumir sua experiência para essa vaga?',
+      chunks: [
+        'Entrevistador: me explique sua forma de investigar incidentes',
+        'Candidato: Eu começo reunindo evidências.',
+      ],
+      expected: 'me explique sua forma de investigar incidentes',
     },
   ])(
-    'generates from the latest question or current fallback: $expected',
+    'generates from the latest deterministic question: $expected',
     async ({ chunks, expected }) => {
       const { service, prisma, ai } = setupSession();
       prisma.transcriptChunk.findMany.mockResolvedValue(
@@ -387,6 +386,72 @@ describe('InterviewService isolation', () => {
     },
   );
 
+  it('persists NOT_FOUND without invoking the LLM or creating a response', async () => {
+    const { service, prisma, tx, ai } = setupSession();
+    prisma.transcriptChunk.findMany.mockResolvedValue([
+      {
+        id: 'chunk-1',
+        content: 'Entrevistador: Vamos seguir para o próximo tópico.',
+        sequence: 1,
+      },
+      {
+        id: 'chunk-2',
+        content: 'Candidato: Eu acompanharia os indicadores.',
+        sequence: 2,
+      },
+    ]);
+
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).resolves.toMatchObject({
+      status: 'NEEDS_CONFIRMATION',
+      detection: {
+        status: 'NOT_FOUND',
+        question: null,
+        confidence: 0,
+        source: 'DETERMINISTIC',
+        detectorVersion: 'deterministic-v1',
+        evidence: [],
+      },
+      answer: null,
+    });
+    expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
+    expect(tx.questionDetection.create.mock.calls[0][0]).toMatchObject({
+      data: {
+        status: 'NOT_FOUND',
+        question: null,
+        source: 'DETERMINISTIC',
+      },
+    });
+    expect(tx.suggestedResponse.create).not.toHaveBeenCalled();
+  });
+
+  it('keeps confidence from 0.50 to 0.84 ambiguous without invoking the LLM', async () => {
+    const { service, prisma, tx, ai } = setupSession();
+    prisma.transcriptChunk.findMany.mockResolvedValue([
+      {
+        id: 'chunk-1',
+        content: 'como você acompanha uma entrega depois da publicação',
+        sequence: 1,
+      },
+    ]);
+
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).resolves.toMatchObject({
+      status: 'NEEDS_CONFIRMATION',
+      detection: {
+        status: 'DETECTED',
+        question: 'como você acompanha uma entrega depois da publicação',
+        confidence: 0.76,
+        source: 'DETERMINISTIC',
+      },
+      answer: null,
+    });
+    expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
+    expect(tx.suggestedResponse.create).not.toHaveBeenCalled();
+  });
+
   it('uses an explicit trimmed question instead of the detected question', async () => {
     const { service, prisma, tx, ai } = setupSession();
     prisma.transcriptChunk.findMany.mockResolvedValue([
@@ -414,7 +479,7 @@ describe('InterviewService isolation', () => {
     });
   });
 
-  it('persists legacy detection evidence and returns the discriminated contract', async () => {
+  it('persists deterministic evidence and returns the discriminated contract', async () => {
     const { service, prisma, tx } = setupSession();
     prisma.transcriptChunk.findMany.mockResolvedValue([
       { id: 'chunk-1', content: 'Como você testa mudanças?', sequence: 1 },
@@ -427,9 +492,9 @@ describe('InterviewService isolation', () => {
       detection: {
         id: 'detection-a',
         question: 'Como você testa mudanças?',
-        confidence: null,
-        source: 'LEGACY',
-        detectorVersion: 'legacy-v1',
+        confidence: 0.92,
+        source: 'DETERMINISTIC',
+        detectorVersion: 'deterministic-v1',
         evidence: [
           {
             chunkId: 'chunk-1',

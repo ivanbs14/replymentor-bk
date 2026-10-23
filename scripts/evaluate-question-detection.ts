@@ -1,6 +1,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
+import {
+  DETERMINISTIC_QUESTION_DETECTOR_VERSION,
+  detectLatestQuestion,
+} from '../src/interview/question-detection/deterministic-question-detector';
 
 type CorpusCase = {
   id: string;
@@ -12,23 +16,10 @@ type CorpusCase = {
 
 type Evaluation = CorpusCase & {
   predictedQuestion: string | null;
+  status: 'DETECTED' | 'NOT_FOUND';
+  confidence: number;
   correct: boolean;
 };
-
-export function detectLatestQuestionCurrent(
-  transcriptWindow: string,
-): string | null {
-  const lines = transcriptWindow
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  for (let index = lines.length - 1; index >= 0; index -= 1) {
-    if (lines[index].endsWith('?')) return lines[index];
-  }
-
-  return lines.length > 0 ? lines[lines.length - 1] : null;
-}
 
 function normalizeQuestion(value: string | null): string | null {
   if (value === null) return null;
@@ -46,25 +37,32 @@ function percentile(values: number[], percentileValue: number): number {
   return sorted[Math.max(0, index)] ?? 0;
 }
 
-const corpusPath = resolve(
-  process.cwd(),
-  'test/fixtures/question-detection-corpus.json',
-);
-const corpus = JSON.parse(readFileSync(corpusPath, 'utf8')) as CorpusCase[];
+const corpus = JSON.parse(
+  readFileSync(
+    resolve(process.cwd(), 'test/fixtures/question-detection-corpus.json'),
+    'utf8',
+  ),
+) as CorpusCase[];
 const durations: number[] = [];
 const evaluations: Evaluation[] = corpus.map((item) => {
-  const transcriptWindow = item.chunks.join('\n');
-  let predictedQuestion: string | null = null;
+  const input = item.chunks.map((content, index) => ({
+    id: `${item.id}-chunk-${index + 1}`,
+    sequence: index + 1,
+    content,
+  }));
+  let result = detectLatestQuestion(input);
   for (let iteration = 0; iteration < 1_000; iteration += 1) {
     const startedAt = performance.now();
-    predictedQuestion = detectLatestQuestionCurrent(transcriptWindow);
+    result = detectLatestQuestion(input);
     durations.push(performance.now() - startedAt);
   }
   return {
     ...item,
-    predictedQuestion,
+    predictedQuestion: result.question,
+    status: result.status,
+    confidence: result.confidence,
     correct:
-      normalizeQuestion(predictedQuestion) ===
+      normalizeQuestion(result.question) ===
       normalizeQuestion(item.expectedQuestion),
   };
 });
@@ -90,22 +88,23 @@ const correct = evaluations.filter((item) => item.correct).length;
 const categories = Object.fromEntries(
   [...new Set(evaluations.map((item) => item.category))].map((category) => {
     const items = evaluations.filter((item) => item.category === category);
+    const categoryCorrect = items.filter((item) => item.correct).length;
     return [
       category,
       {
         total: items.length,
-        correct: items.filter((item) => item.correct).length,
-        accuracy: items.filter((item) => item.correct).length / items.length,
+        correct: categoryCorrect,
+        accuracy: categoryCorrect / items.length,
       },
     ];
   }),
 );
 
 const report = {
-  detectorVersion: 'current-v1',
+  detectorVersion: DETERMINISTIC_QUESTION_DETECTOR_VERSION,
   corpusSize: evaluations.length,
   metrics: {
-    exactAccuracy: correct / evaluations.length,
+    normalizedAccuracy: correct / evaluations.length,
     correct,
     precision,
     recall,
@@ -116,20 +115,37 @@ const report = {
     trueNegative,
     latencyP95Ms: percentile(durations, 95),
   },
+  confusionMatrix: {
+    truePositive,
+    falsePositive,
+    falseNegative,
+    trueNegative,
+  },
   categories,
   failures: evaluations
     .filter((item) => !item.correct)
-    .map(({ id, category, expectedQuestion, predictedQuestion }) => ({
-      id,
-      category,
-      expectedQuestion,
-      predictedQuestion,
-    })),
+    .map(
+      ({
+        id,
+        category,
+        expectedQuestion,
+        predictedQuestion,
+        status,
+        confidence,
+      }) => ({
+        id,
+        category,
+        expectedQuestion,
+        predictedQuestion,
+        status,
+        confidence,
+      }),
+    ),
 };
 
 const outputPath = resolve(
   process.cwd(),
-  'generated/feat-012-current-baseline.json',
+  'generated/feat-017-deterministic-v1.json',
 );
 mkdirSync(resolve(process.cwd(), 'generated'), { recursive: true });
 writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');

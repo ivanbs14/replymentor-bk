@@ -202,7 +202,7 @@ describe('Session integrity with PostgreSQL', () => {
     await service.addTranscript(
       userId,
       sessionId,
-      { transcript: 'Question?' },
+      { transcript: 'Como você testa concorrência?' },
       randomUUID(),
     );
     let release!: (value: typeof generatedAnswer) => void;
@@ -232,7 +232,7 @@ describe('Session integrity with PostgreSQL', () => {
     await service.addTranscript(
       userId,
       sessionId,
-      { transcript: 'Question?' },
+      { transcript: 'Como você testa concorrência?' },
       randomUUID(),
     );
     const key = randomUUID();
@@ -248,6 +248,7 @@ describe('Session integrity with PostgreSQL', () => {
     }
     expect(first.answer.id).toBe(second.answer.id);
     expect(first.detection.id).toBe(second.detection.id);
+    expect(generateSuggestedAnswer).toHaveBeenCalledTimes(1);
     expect(await prisma.suggestedResponse.count()).toBe(1);
     expect(await prisma.questionDetection.count()).toBe(1);
   });
@@ -256,7 +257,7 @@ describe('Session integrity with PostgreSQL', () => {
     await service.addTranscript(
       userId,
       sessionId,
-      { transcript: 'Question?' },
+      { transcript: 'Como você testa concorrência?' },
       randomUUID(),
     );
     const key = randomUUID();
@@ -285,7 +286,7 @@ describe('Session integrity with PostgreSQL', () => {
     await service.addTranscript(
       userId,
       sessionId,
-      { transcript: 'Question?' },
+      { transcript: 'Como você testa concorrência?' },
       randomUUID(),
     );
     await service.generateResponse(userId, sessionId, {}, randomUUID());
@@ -316,7 +317,7 @@ describe('Session integrity with PostgreSQL', () => {
     const chunk = await service.addTranscript(
       userId,
       sessionId,
-      { transcript: 'Question?' },
+      { transcript: 'Como você testa concorrência?' },
       randomUUID(),
     );
     const result = await service.generateResponse(
@@ -335,12 +336,16 @@ describe('Session integrity with PostgreSQL', () => {
     });
     expect(stored).toMatchObject({
       status: 'DETECTED',
-      question: 'Question?',
-      confidence: null,
-      source: 'LEGACY',
-      detectorVersion: 'legacy-v1',
+      question: 'Como você testa concorrência?',
+      confidence: 0.92,
+      source: 'DETERMINISTIC',
+      detectorVersion: 'deterministic-v1',
       evidence: [
-        { chunkId: chunk.id, sequence: chunk.sequence, excerpt: 'Question?' },
+        {
+          chunkId: chunk.id,
+          sequence: chunk.sequence,
+          excerpt: 'Como você testa concorrência?',
+        },
       ],
       response: { id: result.answer.id, detectionId: stored.id },
     });

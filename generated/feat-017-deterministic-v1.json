@@ -1,0 +1,60 @@
+{
+  "detectorVersion": "deterministic-v1",
+  "corpusSize": 120,
+  "metrics": {
+    "normalizedAccuracy": 1,
+    "correct": 120,
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "truePositive": 105,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "trueNegative": 15,
+    "latencyP95Ms": 0.01240199999995184
+  },
+  "confusionMatrix": {
+    "truePositive": 105,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "trueNegative": 15
+  },
+  "categories": {
+    "explicit_question_mark": {
+      "total": 20,
+      "correct": 20,
+      "accuracy": 1
+    },
+    "without_punctuation": {
+      "total": 20,
+      "correct": 20,
+      "accuracy": 1
+    },
+    "implicit_question": {
+      "total": 15,
+      "correct": 15,
+      "accuracy": 1
+    },
+    "multiple_questions": {
+      "total": 15,
+      "correct": 15,
+      "accuracy": 1
+    },
+    "candidate_after_question": {
+      "total": 20,
+      "correct": 20,
+      "accuracy": 1
+    },
+    "noise": {
+      "total": 15,
+      "correct": 15,
+      "accuracy": 1
+    },
+    "no_question": {
+      "total": 15,
+      "correct": 15,
+      "accuracy": 1
+    }
+  },
+  "failures": []
+}
