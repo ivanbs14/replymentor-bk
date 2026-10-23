@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import type { PrismaService } from '../prisma.service';
 import type { AiService } from '../ai/ai.service';
+import { buildGenerationFingerprint } from './idempotency';
 import { InterviewService } from './interview.service';
 
 const idempotencyKey = '550e8400-e29b-41d4-a716-446655440000';
@@ -32,6 +33,27 @@ function setupSession() {
     keyPoints: ['APIs'],
     strategicNote: 'Seja objetivo.',
   };
+  type DetectionCreateInput = {
+    data: {
+      sessionId: string;
+      status: string;
+      question: string;
+      confidence: number | null;
+      source: string;
+      detectorVersion: string;
+      evidence: unknown[];
+      idempotencyKey: string;
+      requestFingerprint: string;
+    };
+  };
+  type ResponseCreateInput = {
+    data: typeof answer & {
+      sessionId: string;
+      detectionId: string;
+      idempotencyKey: string;
+      requestFingerprint: string;
+    };
+  };
   const tx = {
     $queryRaw: jest
       .fn()
@@ -40,18 +62,28 @@ function setupSession() {
       ),
     interviewSession: { update: jest.fn() },
     transcriptChunk: { findFirst: jest.fn(), create: jest.fn() },
+    questionDetection: {
+      findFirst: jest.fn(),
+      create: jest.fn(({ data }: DetectionCreateInput) =>
+        Promise.resolve({
+          ...data,
+          id: 'detection-a',
+          provider: null,
+          model: null,
+          createdAt: new Date('2026-01-01T00:00:00Z'),
+        }),
+      ),
+    },
     suggestedResponse: {
       findFirst: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
-      create: jest
-        .fn()
-        .mockImplementation(({ data }: { data: typeof answer }) =>
-          Promise.resolve({
-            ...data,
-            id: 'response-a',
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-          }),
-        ),
+      create: jest.fn(({ data }: ResponseCreateInput) =>
+        Promise.resolve({
+          ...data,
+          id: 'response-a',
+          createdAt: new Date('2026-01-01T00:00:00Z'),
+        }),
+      ),
     },
     sessionSummary: { findUnique: jest.fn(), create: jest.fn() },
   };
@@ -70,6 +102,7 @@ function setupSession() {
       findFirst: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
     },
+    questionDetection: { findFirst: jest.fn() },
     suggestedResponse: { findFirst: jest.fn() },
     sessionSummary: { findUnique: jest.fn() },
     $transaction: jest.fn((callback: (client: typeof tx) => unknown) =>
@@ -156,10 +189,11 @@ describe('InterviewService isolation', () => {
       expect(ai.resolveGenerationTarget).not.toHaveBeenCalled();
       expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
       expect(prisma.transcriptChunk.findFirst).not.toHaveBeenCalled();
-      expect(prisma.suggestedResponse.findFirst).not.toHaveBeenCalled();
+      expect(prisma.questionDetection.findFirst).not.toHaveBeenCalled();
       expect(prisma.sessionSummary.findUnique).not.toHaveBeenCalled();
       expect(tx.interviewSession.update).not.toHaveBeenCalled();
       expect(tx.transcriptChunk.create).not.toHaveBeenCalled();
+      expect(tx.questionDetection.create).not.toHaveBeenCalled();
       expect(tx.suggestedResponse.create).not.toHaveBeenCalled();
       expect(tx.sessionSummary.findUnique).not.toHaveBeenCalled();
       expect(tx.sessionSummary.create).not.toHaveBeenCalled();
@@ -212,7 +246,7 @@ describe('InterviewService isolation', () => {
           context: { userId: 'user-a' },
         }),
       },
-      suggestedResponse: { findFirst: jest.fn() },
+      questionDetection: { findFirst: jest.fn() },
     };
     const ai = {
       resolveGenerationTarget: jest.fn().mockReturnValue({
@@ -327,7 +361,11 @@ describe('InterviewService isolation', () => {
       const { service, prisma, ai } = setupSession();
       prisma.transcriptChunk.findMany.mockResolvedValue(
         chunks
-          .map((content, index) => ({ content, sequence: index + 1 }))
+          .map((content, index) => ({
+            id: `chunk-${index + 1}`,
+            content,
+            sequence: index + 1,
+          }))
           .reverse(),
       );
       await service.generateResponse('user-a', 'session-a', {}, idempotencyKey);
@@ -350,9 +388,9 @@ describe('InterviewService isolation', () => {
   );
 
   it('uses an explicit trimmed question instead of the detected question', async () => {
-    const { service, prisma, ai } = setupSession();
+    const { service, prisma, tx, ai } = setupSession();
     prisma.transcriptChunk.findMany.mockResolvedValue([
-      { content: 'Última pergunta?', sequence: 1 },
+      { id: 'chunk-1', content: 'Última pergunta?', sequence: 1 },
     ]);
     await service.generateResponse(
       'user-a',
@@ -363,5 +401,150 @@ describe('InterviewService isolation', () => {
     expect(ai.generateSuggestedAnswer).toHaveBeenCalledWith(
       expect.objectContaining({ detectedQuestion: 'Pergunta escolhida?' }),
     );
+    expect(tx.questionDetection.create).toHaveBeenCalled();
+    expect(tx.questionDetection.create.mock.calls[0][0]).toMatchObject({
+      data: {
+        status: 'DETECTED',
+        question: 'Pergunta escolhida?',
+        confidence: null,
+        source: 'MANUAL',
+        detectorVersion: 'manual-v1',
+        evidence: [],
+      },
+    });
+  });
+
+  it('persists legacy detection evidence and returns the discriminated contract', async () => {
+    const { service, prisma, tx } = setupSession();
+    prisma.transcriptChunk.findMany.mockResolvedValue([
+      { id: 'chunk-1', content: 'Como você testa mudanças?', sequence: 1 },
+    ]);
+
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).resolves.toMatchObject({
+      status: 'ANSWER_READY',
+      detection: {
+        id: 'detection-a',
+        question: 'Como você testa mudanças?',
+        confidence: null,
+        source: 'LEGACY',
+        detectorVersion: 'legacy-v1',
+        evidence: [
+          {
+            chunkId: 'chunk-1',
+            sequence: 1,
+            excerpt: 'Como você testa mudanças?',
+          },
+        ],
+      },
+      answer: {
+        id: 'response-a',
+        detectedQuestion: 'Como você testa mudanças?',
+      },
+      detectedQuestion: 'Como você testa mudanças?',
+    });
+    expect(tx.suggestedResponse.create).toHaveBeenCalled();
+    expect(tx.suggestedResponse.create.mock.calls[0][0]).toMatchObject({
+      data: { detectionId: 'detection-a' },
+    });
+  });
+
+  it('limits evidence to the question instead of unrelated leading text', async () => {
+    const { service, prisma } = setupSession();
+    const question = 'Como você testa mudanças?';
+    prisma.transcriptChunk.findMany.mockResolvedValue([
+      {
+        id: 'chunk-1',
+        content: `${'contexto sensível '.repeat(30)}\n${question}`,
+        sequence: 1,
+      },
+    ]);
+
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).resolves.toMatchObject({
+      detection: {
+        evidence: [{ excerpt: question }],
+      },
+    });
+  });
+
+  it('replays a persisted detection before invoking the provider', async () => {
+    const { service, prisma, ai } = setupSession();
+    const expectedFingerprint = buildGenerationFingerprint({
+      forceQuestion: undefined,
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+    });
+    prisma.questionDetection.findFirst.mockResolvedValue({
+      id: 'detection-existing',
+      sessionId: 'session-a',
+      status: 'DETECTED',
+      question: 'Pergunta persistida?',
+      confidence: null,
+      source: 'LEGACY',
+      detectorVersion: 'legacy-v1',
+      evidence: [],
+      provider: null,
+      model: null,
+      idempotencyKey,
+      requestFingerprint: expectedFingerprint,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      response: {
+        id: 'response-existing',
+        detectedQuestion: 'Pergunta persistida?',
+        suggestedAnswer: 'Resposta persistida.',
+        shortVersion: 'Resposta.',
+        keyPoints: ['persistência'],
+        strategicNote: 'Sem nova chamada.',
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+      },
+    });
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).resolves.toMatchObject({
+      status: 'ANSWER_READY',
+      answer: { id: 'response-existing' },
+    });
+    expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
+  });
+
+  it('returns NEEDS_CONFIRMATION when replaying a detection without response', async () => {
+    const { service, prisma, ai } = setupSession();
+    const expectedFingerprint = buildGenerationFingerprint({
+      forceQuestion: undefined,
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+    });
+    prisma.questionDetection.findFirst.mockResolvedValue({
+      id: 'detection-not-found',
+      sessionId: 'session-a',
+      status: 'NOT_FOUND',
+      question: null,
+      confidence: null,
+      source: 'DETERMINISTIC',
+      detectorVersion: 'detector-v1',
+      evidence: [],
+      provider: null,
+      model: null,
+      idempotencyKey,
+      requestFingerprint: expectedFingerprint,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      response: null,
+    });
+
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).resolves.toMatchObject({
+      status: 'NEEDS_CONFIRMATION',
+      detection: {
+        id: 'detection-not-found',
+        status: 'NOT_FOUND',
+        question: null,
+      },
+      answer: null,
+    });
+    expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
   });
 });

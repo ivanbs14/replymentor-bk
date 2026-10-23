@@ -225,6 +225,7 @@ describe('Session integrity with PostgreSQL', () => {
       response: { code: 'SESSION_CLOSED' },
     });
     expect(await prisma.suggestedResponse.count()).toBe(0);
+    expect(await prisma.questionDetection.count()).toBe(0);
   });
 
   it('persists one generated response for simultaneous retries with the same key', async () => {
@@ -240,8 +241,15 @@ describe('Session integrity with PostgreSQL', () => {
       service.generateResponse(userId, sessionId, {}, key),
     ]);
 
-    expect(first.id).toBe(second.id);
+    expect(first.status).toBe('ANSWER_READY');
+    expect(second.status).toBe('ANSWER_READY');
+    if (first.status !== 'ANSWER_READY' || second.status !== 'ANSWER_READY') {
+      throw new Error('Expected ANSWER_READY results.');
+    }
+    expect(first.answer.id).toBe(second.answer.id);
+    expect(first.detection.id).toBe(second.detection.id);
     expect(await prisma.suggestedResponse.count()).toBe(1);
+    expect(await prisma.questionDetection.count()).toBe(1);
   });
 
   it('rejects reuse of a generation key with a different fingerprint', async () => {
@@ -270,6 +278,7 @@ describe('Session integrity with PostgreSQL', () => {
       response: { code: 'IDEMPOTENCY_KEY_REUSED' },
     });
     expect(await prisma.suggestedResponse.count()).toBe(1);
+    expect(await prisma.questionDetection.count()).toBe(1);
   });
 
   it('keeps chunks and responses immutable after closing', async () => {
@@ -284,6 +293,7 @@ describe('Session integrity with PostgreSQL', () => {
     const before = {
       chunks: await prisma.transcriptChunk.count(),
       responses: await prisma.suggestedResponse.count(),
+      detections: await prisma.questionDetection.count(),
     };
 
     await expect(
@@ -299,6 +309,41 @@ describe('Session integrity with PostgreSQL', () => {
     ).rejects.toMatchObject({ response: { code: 'SESSION_CLOSED' } });
     expect(await prisma.transcriptChunk.count()).toBe(before.chunks);
     expect(await prisma.suggestedResponse.count()).toBe(before.responses);
+    expect(await prisma.questionDetection.count()).toBe(before.detections);
+  });
+
+  it('persists an auditable detection linked one-to-one with its response', async () => {
+    const chunk = await service.addTranscript(
+      userId,
+      sessionId,
+      { transcript: 'Question?' },
+      randomUUID(),
+    );
+    const result = await service.generateResponse(
+      userId,
+      sessionId,
+      {},
+      randomUUID(),
+    );
+    expect(result.status).toBe('ANSWER_READY');
+    if (result.status !== 'ANSWER_READY') {
+      throw new Error('Expected ANSWER_READY result.');
+    }
+    const stored = await prisma.questionDetection.findUniqueOrThrow({
+      where: { id: result.detection.id },
+      include: { response: true },
+    });
+    expect(stored).toMatchObject({
+      status: 'DETECTED',
+      question: 'Question?',
+      confidence: null,
+      source: 'LEGACY',
+      detectorVersion: 'legacy-v1',
+      evidence: [
+        { chunkId: chunk.id, sequence: chunk.sequence, excerpt: 'Question?' },
+      ],
+      response: { id: result.answer.id, detectionId: stored.id },
+    });
   });
 
   it('keeps migration backfill, indexes, and legacy nullable keys compatible', async () => {
@@ -342,14 +387,69 @@ describe('Session integrity with PostgreSQL', () => {
         AND indexname IN (
           'InterviewSession_one_active_per_context',
           'TranscriptChunk_session_idempotency_key',
-          'SuggestedResponse_session_idempotency_key'
+          'SuggestedResponse_session_idempotency_key',
+          'QuestionDetection_session_idempotency_key',
+          'QuestionDetection_sessionId_id_key',
+          'SuggestedResponse_detectionId_key',
+          'SuggestedResponse_sessionId_detectionId_key'
         )
     `;
     expect(indexes.map(({ indexname }) => indexname).sort()).toEqual([
       'InterviewSession_one_active_per_context',
+      'QuestionDetection_sessionId_id_key',
+      'QuestionDetection_session_idempotency_key',
+      'SuggestedResponse_detectionId_key',
+      'SuggestedResponse_sessionId_detectionId_key',
       'SuggestedResponse_session_idempotency_key',
       'TranscriptChunk_session_idempotency_key',
     ]);
+  });
+
+  it('rejects linking a response to a detection from another session', async () => {
+    const otherUser = await prisma.user.create({
+      data: {
+        email: 'other-session@example.com',
+        passwordHash: 'unused',
+      },
+    });
+    const otherContext = await prisma.interviewContext.create({
+      data: {
+        userId: otherUser.id,
+        resumeText: 'R'.repeat(50),
+        interviewType: 'Técnica (Coding/System Design)',
+        jobLevel: 'Pleno',
+        jobDescription: 'D'.repeat(20),
+        companyName: 'Other company',
+        responsePreference: 'equilibrada',
+      },
+    });
+    const otherSession = await prisma.interviewSession.create({
+      data: { contextId: otherContext.id },
+    });
+    const detection = await prisma.questionDetection.create({
+      data: {
+        sessionId,
+        status: 'DETECTED',
+        question: 'Question?',
+        source: 'LEGACY',
+        detectorVersion: 'legacy-v1',
+        evidence: [],
+      },
+    });
+
+    await expect(
+      prisma.suggestedResponse.create({
+        data: {
+          sessionId: otherSession.id,
+          detectionId: detection.id,
+          detectedQuestion: 'Question?',
+          suggestedAnswer: 'Answer.',
+          shortVersion: 'Answer.',
+          keyPoints: [],
+          strategicNote: 'Be concise.',
+        },
+      }),
+    ).rejects.toThrow();
   });
 
   it('reports duplicate context ids during the migration preflight', async () => {

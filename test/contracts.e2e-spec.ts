@@ -144,7 +144,20 @@ describe('Final API + Prisma contracts', () => {
       .set('Idempotency-Key', randomUUID())
       .send({ provider: 'gemini' })
       .expect(201)
-      .expect(({ body }) => expect(body).toMatchObject(generatedAnswer));
+      .expect(({ body }) =>
+        expect(body).toMatchObject({
+          ...generatedAnswer,
+          status: 'ANSWER_READY',
+          detection: {
+            status: 'DETECTED',
+            question: generatedAnswer.detectedQuestion,
+            confidence: null,
+            source: 'LEGACY',
+            detectorVersion: 'legacy-v1',
+          },
+          answer: generatedAnswer,
+        }),
+      );
     const endedResponse = await owner
       .post(`${sessionPath}/end`)
       .set('Origin', origin)

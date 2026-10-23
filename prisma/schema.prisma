@@ -18,6 +18,18 @@ enum SessionStatus {
   CLOSED
 }
 
+enum QuestionDetectionStatus {
+  DETECTED
+  NOT_FOUND
+}
+
+enum QuestionDetectionSource {
+  LEGACY
+  DETERMINISTIC
+  LLM
+  MANUAL
+}
+
 model InterviewContext {
   id                 String             @id @default(cuid())
   userId             String
@@ -53,6 +65,7 @@ model InterviewSession {
   contextId              String
   context                InterviewContext    @relation(fields: [contextId], references: [id], onDelete: Cascade)
   transcripts            TranscriptChunk[]
+  questionDetections     QuestionDetection[]
   suggestedResponse      SuggestedResponse[]
   summary                SessionSummary?
   createdAt              DateTime            @default(now())
@@ -73,10 +86,30 @@ model TranscriptChunk {
   @@unique([sessionId, sequence])
 }
 
-model SuggestedResponse {
-  id                 String           @id @default(cuid())
+model QuestionDetection {
+  id                 String                  @id @default(cuid())
   sessionId          String
-  session            InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session            InterviewSession        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  status             QuestionDetectionStatus
+  question           String?
+  confidence         Float?
+  source             QuestionDetectionSource
+  detectorVersion    String
+  evidence           Json
+  provider           String?
+  model              String?
+  idempotencyKey     String?
+  requestFingerprint String?
+  response           SuggestedResponse?
+  createdAt          DateTime                @default(now())
+
+  @@unique([sessionId, id])
+}
+
+model SuggestedResponse {
+  id                 String            @id @default(cuid())
+  sessionId          String
+  session            InterviewSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   detectedQuestion   String
   suggestedAnswer    String
   shortVersion       String
@@ -84,7 +117,11 @@ model SuggestedResponse {
   strategicNote      String
   idempotencyKey     String?
   requestFingerprint String?
-  createdAt          DateTime         @default(now())
+  detectionId        String            @unique
+  detection          QuestionDetection @relation(fields: [sessionId, detectionId], references: [sessionId, id], onDelete: Restrict, map: "SuggestedResponse_detectionId_fkey")
+  createdAt          DateTime          @default(now())
+
+  @@unique([sessionId, detectionId])
 }
 
 model SessionSummary {

@@ -4,7 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, SessionStatus } from '@prisma/client';
+import {
+  Prisma,
+  QuestionDetectionSource,
+  QuestionDetectionStatus,
+  SessionStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { AiService } from '../ai/ai.service';
 import type {
@@ -17,6 +22,10 @@ import {
   buildGenerationFingerprint,
   buildTranscriptFingerprint,
 } from './idempotency';
+import type {
+  GenerateResponseResult,
+  QuestionDetectionEvidence,
+} from './question-detection.types';
 
 type LockedSession = {
   id: string;
@@ -192,7 +201,7 @@ export class InterviewService {
     sessionId: string,
     payload: GenerateResponseDto,
     idempotencyKey: string,
-  ) {
+  ): Promise<GenerateResponseResult> {
     const session = await this.prisma.interviewSession.findUnique({
       where: { id: sessionId },
       include: { context: true },
@@ -211,15 +220,16 @@ export class InterviewService {
       forceQuestion: payload.forceQuestion,
       ...target,
     });
-    const existing = await this.prisma.suggestedResponse.findFirst({
+    const existing = await this.prisma.questionDetection.findFirst({
       where: { sessionId, idempotencyKey },
+      include: { response: true },
     });
     if (existing) {
       this.assertMatchingFingerprint(
         existing.requestFingerprint,
         requestFingerprint,
       );
-      return this.toSuggestedResponse(existing);
+      return this.toGenerationResult(existing);
     }
     this.assertActive(session.status);
 
@@ -258,8 +268,9 @@ export class InterviewService {
 
     const saved = await this.prisma.$transaction(async (tx) => {
       const locked = await this.lockOwnedSession(tx, userId, sessionId);
-      const replay = await tx.suggestedResponse.findFirst({
+      const replay = await tx.questionDetection.findFirst({
         where: { sessionId, idempotencyKey },
+        include: { response: true },
       });
       if (replay) {
         this.assertMatchingFingerprint(
@@ -269,10 +280,27 @@ export class InterviewService {
         return replay;
       }
       this.assertActive(locked.status);
-      return tx.suggestedResponse.create({
+
+      const detection = await tx.questionDetection.create({
         data: {
           sessionId,
-          detectedQuestion: generated.detectedQuestion,
+          status: QuestionDetectionStatus.DETECTED,
+          question: detectedQuestion,
+          confidence: null,
+          source: payload.forceQuestion
+            ? QuestionDetectionSource.MANUAL
+            : QuestionDetectionSource.LEGACY,
+          detectorVersion: payload.forceQuestion ? 'manual-v1' : 'legacy-v1',
+          evidence: this.buildDetectionEvidence(chunks, detectedQuestion),
+          idempotencyKey,
+          requestFingerprint,
+        },
+      });
+      const response = await tx.suggestedResponse.create({
+        data: {
+          sessionId,
+          detectionId: detection.id,
+          detectedQuestion,
           suggestedAnswer: generated.suggestedAnswer,
           shortVersion: generated.shortVersion,
           keyPoints: generated.keyPoints,
@@ -281,9 +309,10 @@ export class InterviewService {
           requestFingerprint,
         },
       });
+      return { ...detection, response };
     });
 
-    return this.toSuggestedResponse(saved);
+    return this.toGenerationResult(saved);
   }
 
   async endSession(userId: string, sessionId: string) {
@@ -353,6 +382,34 @@ export class InterviewService {
     }
 
     return lines.length > 0 ? lines[lines.length - 1] : null;
+  }
+
+  private buildDetectionEvidence(
+    chunks: Array<{ id?: string; sequence: number; content: string }>,
+    question: string,
+  ): QuestionDetectionEvidence[] {
+    const normalizedQuestion = question.toLocaleLowerCase('pt-BR');
+    const source = [...chunks]
+      .reverse()
+      .find((chunk) =>
+        chunk.content.toLocaleLowerCase('pt-BR').includes(normalizedQuestion),
+      );
+    if (!source?.id) return [];
+    const matchIndex = source.content
+      .toLocaleLowerCase('pt-BR')
+      .indexOf(normalizedQuestion);
+    const excerptSource =
+      matchIndex >= 0 ? source.content.slice(matchIndex) : source.content;
+    return [
+      {
+        chunkId: source.id,
+        sequence: source.sequence,
+        excerpt:
+          excerptSource.length <= 240
+            ? excerptSource
+            : `${excerptSource.slice(0, 237)}...`,
+      },
+    ];
   }
 
   private async lockOwnedSession(
@@ -434,5 +491,82 @@ export class InterviewService {
       strategicNote: response.strategicNote,
       createdAt: response.createdAt,
     };
+  }
+
+  private toGenerationResult(detection: {
+    id: string;
+    status: QuestionDetectionStatus;
+    question: string | null;
+    confidence: number | null;
+    source: QuestionDetectionSource;
+    evidence: Prisma.JsonValue;
+    detectorVersion: string;
+    provider: string | null;
+    model: string | null;
+    createdAt: Date;
+    response: {
+      id: string;
+      detectedQuestion: string;
+      suggestedAnswer: string;
+      shortVersion: string;
+      keyPoints: string[];
+      strategicNote: string;
+      createdAt: Date;
+    } | null;
+  }): GenerateResponseResult {
+    const serializedDetection = {
+      id: detection.id,
+      status: detection.status,
+      question: detection.question,
+      confidence: detection.confidence,
+      source: detection.source,
+      evidence: this.parseDetectionEvidence(detection.evidence),
+      detectorVersion: detection.detectorVersion,
+      provider: detection.provider,
+      model: detection.model,
+      createdAt: detection.createdAt,
+    };
+    if (
+      detection.status === QuestionDetectionStatus.NOT_FOUND ||
+      !detection.response
+    ) {
+      return {
+        status: 'NEEDS_CONFIRMATION',
+        detection: serializedDetection,
+        answer: null,
+      };
+    }
+    const answer = this.toSuggestedResponse(detection.response);
+    return {
+      status: 'ANSWER_READY',
+      detection: serializedDetection,
+      answer,
+      ...answer,
+    };
+  }
+
+  private parseDetectionEvidence(
+    evidence: Prisma.JsonValue,
+  ): QuestionDetectionEvidence[] {
+    if (!Array.isArray(evidence)) return [];
+    return evidence.flatMap((item) => {
+      if (
+        typeof item !== 'object' ||
+        item === null ||
+        Array.isArray(item) ||
+        typeof item.chunkId !== 'string' ||
+        typeof item.sequence !== 'number' ||
+        typeof item.excerpt !== 'string'
+      ) {
+        return [];
+      }
+      return [
+        {
+          chunkId: item.chunkId,
+          sequence: item.sequence,
+          excerpt: item.excerpt,
+        },
+      ];
+    });
   }
 }

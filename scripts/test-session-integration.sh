@@ -16,6 +16,7 @@ if [[ "$database_name" != *"_test"* ]]; then
 fi
 
 export DATABASE_URL="$DATABASE_URL_TEST"
+bash scripts/test-question-detection-migration.sh
 npx prisma migrate deploy
 npm run test:e2e -- --runInBand --no-watchman \
   test/session-integrity.e2e-spec.ts test/contracts.e2e-spec.ts
