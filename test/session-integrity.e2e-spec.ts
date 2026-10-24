@@ -2,6 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { PrismaClient, SessionStatus } from '@prisma/client';
 import type { AiService } from '../src/ai/ai.service';
 import { InterviewService } from '../src/interview/interview.service';
+import type { HybridQuestionDetector } from '../src/interview/question-detection/hybrid-question-detector';
+import type {
+  DeterministicQuestionDetectionResult,
+  QuestionDetectionInputChunk,
+} from '../src/interview/question-detection/deterministic-question-detector';
 import type { PrismaService } from '../src/prisma.service';
 
 const prisma = new PrismaClient();
@@ -20,6 +25,7 @@ describe('Session integrity with PostgreSQL', () => {
   let sessionId: string;
   let transcribeLiveChunk: jest.Mock;
   let generateSuggestedAnswer: jest.Mock;
+  let hybridDetect: jest.Mock;
   let service: InterviewService;
 
   beforeAll(async () => {
@@ -65,9 +71,25 @@ describe('Session integrity with PostgreSQL', () => {
         model: 'gemini-2.0-flash',
       }),
     };
+    hybridDetect = jest.fn(
+      (
+        _chunks: QuestionDetectionInputChunk[],
+        deterministic: DeterministicQuestionDetectionResult,
+      ) =>
+        Promise.resolve({
+          ...deterministic,
+          source: 'DETERMINISTIC',
+          approved:
+            deterministic.status === 'DETECTED' &&
+            deterministic.confidence >= 0.85,
+        }),
+    );
     service = new InterviewService(
       prisma as unknown as PrismaService,
       ai as unknown as AiService,
+      {
+        detect: hybridDetect,
+      } as unknown as HybridQuestionDetector,
     );
   });
 
@@ -198,7 +220,7 @@ describe('Session integrity with PostgreSQL', () => {
     expect(await prisma.transcriptChunk.count()).toBe(0);
   });
 
-  it('discards a generated answer whose LLM completes after closing', async () => {
+  it('lets generation commit before a concurrent close when generation owns the session lock', async () => {
     await service.addTranscript(
       userId,
       sessionId,
@@ -206,10 +228,16 @@ describe('Session integrity with PostgreSQL', () => {
       randomUUID(),
     );
     let release!: (value: typeof generatedAnswer) => void;
-    generateSuggestedAnswer.mockReturnValue(
-      new Promise<typeof generatedAnswer>((resolve) => {
-        release = resolve;
-      }),
+    let markGenerationStarted!: () => void;
+    const generationStarted = new Promise<void>((resolve) => {
+      markGenerationStarted = resolve;
+    });
+    generateSuggestedAnswer.mockImplementation(
+      () =>
+        new Promise<typeof generatedAnswer>((resolve) => {
+          release = resolve;
+          markGenerationStarted();
+        }),
     );
     const pending = service.generateResponse(
       userId,
@@ -217,15 +245,35 @@ describe('Session integrity with PostgreSQL', () => {
       {},
       randomUUID(),
     );
-    await new Promise((resolve) => setImmediate(resolve));
-    await service.endSession(userId, sessionId);
+    await generationStarted;
+    const closing = service.endSession(userId, sessionId);
+    await new Promise((resolve) => setTimeout(resolve, 5_200));
     release(generatedAnswer);
 
-    await expect(pending).rejects.toMatchObject({
-      response: { code: 'SESSION_CLOSED' },
-    });
-    expect(await prisma.suggestedResponse.count()).toBe(0);
-    expect(await prisma.questionDetection.count()).toBe(0);
+    await expect(pending).resolves.toMatchObject({ status: 'ANSWER_READY' });
+    await closing;
+    expect(await prisma.suggestedResponse.count()).toBe(1);
+    expect(await prisma.questionDetection.count()).toBe(1);
+  }, 10_000);
+
+  it('replays a persisted ambiguous detection after close without a second LLM detection', async () => {
+    await service.addTranscript(
+      userId,
+      sessionId,
+      { transcript: 'como você acompanha uma entrega depois da publicação' },
+      randomUUID(),
+    );
+    const key = randomUUID();
+    await expect(
+      service.generateResponse(userId, sessionId, {}, key),
+    ).resolves.toMatchObject({ status: 'NEEDS_CONFIRMATION', answer: null });
+    await service.endSession(userId, sessionId);
+    await expect(
+      service.generateResponse(userId, sessionId, {}, key),
+    ).resolves.toMatchObject({ status: 'NEEDS_CONFIRMATION', answer: null });
+    expect(hybridDetect).toHaveBeenCalledTimes(1);
+    expect(generateSuggestedAnswer).not.toHaveBeenCalled();
+    expect(await prisma.questionDetection.count()).toBe(1);
   });
 
   it('persists one generated response for simultaneous retries with the same key', async () => {
@@ -251,6 +299,99 @@ describe('Session integrity with PostgreSQL', () => {
     expect(generateSuggestedAnswer).toHaveBeenCalledTimes(1);
     expect(await prisma.suggestedResponse.count()).toBe(1);
     expect(await prisma.questionDetection.count()).toBe(1);
+  });
+
+  it('persists one final LLM detection for concurrent ambiguous retries', async () => {
+    const chunk = await service.addTranscript(
+      userId,
+      sessionId,
+      { transcript: 'como você acompanha uma entrega depois da publicação' },
+      randomUUID(),
+    );
+    hybridDetect.mockResolvedValue({
+      status: 'DETECTED',
+      question: chunk.content,
+      confidence: 0.82,
+      evidence: [
+        {
+          chunkId: chunk.id,
+          sequence: chunk.sequence,
+          excerpt: chunk.content,
+        },
+      ],
+      source: 'LLM',
+      detectorVersion: 'hybrid-v1',
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+      approved: true,
+    });
+    const key = randomUUID();
+
+    const [first, second] = await Promise.all([
+      service.generateResponse(userId, sessionId, {}, key),
+      service.generateResponse(userId, sessionId, {}, key),
+    ]);
+
+    expect(first.status).toBe('ANSWER_READY');
+    expect(second.status).toBe('ANSWER_READY');
+    expect(hybridDetect).toHaveBeenCalledTimes(1);
+    expect(generateSuggestedAnswer).toHaveBeenCalledTimes(1);
+    const stored = await prisma.questionDetection.findMany({
+      include: { response: true },
+    });
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({
+      status: 'DETECTED',
+      source: 'LLM',
+      detectorVersion: 'hybrid-v1',
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+      response: { detectedQuestion: chunk.content },
+    });
+  });
+
+  it('reuses an approved LLM detection when generation is retried after failure', async () => {
+    const chunk = await service.addTranscript(
+      userId,
+      sessionId,
+      { transcript: 'como você acompanha uma entrega depois da publicação' },
+      randomUUID(),
+    );
+    hybridDetect.mockResolvedValue({
+      status: 'DETECTED',
+      question: chunk.content,
+      confidence: 0.82,
+      evidence: [
+        {
+          chunkId: chunk.id,
+          sequence: chunk.sequence,
+          excerpt: chunk.content,
+        },
+      ],
+      source: 'LLM',
+      detectorVersion: 'hybrid-v1',
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+      approved: true,
+    });
+    generateSuggestedAnswer.mockRejectedValueOnce(
+      new Error('synthetic generation failure'),
+    );
+    const key = randomUUID();
+
+    await expect(
+      service.generateResponse(userId, sessionId, {}, key),
+    ).rejects.toThrow('synthetic generation failure');
+    expect(await prisma.questionDetection.count()).toBe(1);
+    expect(await prisma.suggestedResponse.count()).toBe(0);
+
+    await expect(
+      service.generateResponse(userId, sessionId, {}, key),
+    ).resolves.toMatchObject({ status: 'ANSWER_READY' });
+    expect(hybridDetect).toHaveBeenCalledTimes(1);
+    expect(generateSuggestedAnswer).toHaveBeenCalledTimes(2);
+    expect(await prisma.questionDetection.count()).toBe(1);
+    expect(await prisma.suggestedResponse.count()).toBe(1);
   });
 
   it('rejects reuse of a generation key with a different fingerprint', async () => {

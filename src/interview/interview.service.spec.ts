@@ -3,6 +3,11 @@ import type { PrismaService } from '../prisma.service';
 import type { AiService } from '../ai/ai.service';
 import { buildGenerationFingerprint } from './idempotency';
 import { InterviewService } from './interview.service';
+import type { HybridQuestionDetector } from './question-detection/hybrid-question-detector';
+import type {
+  DeterministicQuestionDetectionResult,
+  QuestionDetectionInputChunk,
+} from './question-detection/deterministic-question-detector';
 
 const idempotencyKey = '550e8400-e29b-41d4-a716-446655440000';
 const context = {
@@ -54,6 +59,8 @@ function setupSession() {
       requestFingerprint: string;
     };
   };
+  let persistedDetection: Record<string, unknown> | null = null;
+  const transcriptFindMany = jest.fn().mockResolvedValue([]);
   const tx = {
     $queryRaw: jest
       .fn()
@@ -61,29 +68,37 @@ function setupSession() {
         Promise.resolve(query.values.includes('user-a') ? [session] : []),
       ),
     interviewSession: { update: jest.fn() },
-    transcriptChunk: { findFirst: jest.fn(), create: jest.fn() },
-    questionDetection: {
+    transcriptChunk: {
       findFirst: jest.fn(),
-      create: jest.fn(({ data }: DetectionCreateInput) =>
-        Promise.resolve({
+      findMany: transcriptFindMany,
+      create: jest.fn(),
+    },
+    questionDetection: {
+      findFirst: jest.fn(() => Promise.resolve(persistedDetection)),
+      create: jest.fn(({ data }: DetectionCreateInput) => {
+        persistedDetection = {
           ...data,
           id: 'detection-a',
-          provider: null,
-          model: null,
+          provider: Reflect.get(data, 'provider') ?? null,
+          model: Reflect.get(data, 'model') ?? null,
           createdAt: new Date('2026-01-01T00:00:00Z'),
-        }),
-      ),
+          response: null,
+        };
+        return Promise.resolve(persistedDetection);
+      }),
     },
     suggestedResponse: {
       findFirst: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
-      create: jest.fn(({ data }: ResponseCreateInput) =>
-        Promise.resolve({
+      create: jest.fn(({ data }: ResponseCreateInput) => {
+        const response = {
           ...data,
           id: 'response-a',
           createdAt: new Date('2026-01-01T00:00:00Z'),
-        }),
-      ),
+        };
+        if (persistedDetection) persistedDetection.response = response;
+        return Promise.resolve(response);
+      }),
     },
     sessionSummary: { findUnique: jest.fn(), create: jest.fn() },
   };
@@ -100,7 +115,7 @@ function setupSession() {
     },
     transcriptChunk: {
       findFirst: jest.fn(),
-      findMany: jest.fn().mockResolvedValue([]),
+      findMany: transcriptFindMany,
     },
     questionDetection: { findFirst: jest.fn() },
     suggestedResponse: { findFirst: jest.fn() },
@@ -116,14 +131,34 @@ function setupSession() {
     transcribeLiveChunk: jest.fn().mockResolvedValue('Transcrição.'),
     generateSuggestedAnswer: jest.fn().mockResolvedValue(answer),
   };
+  const hybrid = {
+    detect: jest.fn<
+      ReturnType<HybridQuestionDetector['detect']>,
+      Parameters<HybridQuestionDetector['detect']>
+    >(
+      (
+        _chunks: QuestionDetectionInputChunk[],
+        deterministic?: DeterministicQuestionDetectionResult,
+      ) =>
+        Promise.resolve({
+          ...deterministic!,
+          source: 'DETERMINISTIC',
+          approved:
+            deterministic!.status === 'DETECTED' &&
+            deterministic!.confidence >= 0.85,
+        }),
+    ),
+  };
   return {
     prisma,
     tx,
     ai,
+    hybrid,
     session,
     service: new InterviewService(
       prisma as unknown as PrismaService,
       ai as unknown as AiService,
+      hybrid as unknown as HybridQuestionDetector,
     ),
   };
 }
@@ -229,6 +264,7 @@ describe('InterviewService isolation', () => {
     const service = new InterviewService(
       prisma as unknown as PrismaService,
       {} as AiService,
+      {} as HybridQuestionDetector,
     );
 
     await expect(
@@ -258,6 +294,7 @@ describe('InterviewService isolation', () => {
     const service = new InterviewService(
       prisma as unknown as PrismaService,
       ai as unknown as AiService,
+      {} as HybridQuestionDetector,
     );
 
     await expect(
@@ -301,6 +338,7 @@ describe('InterviewService isolation', () => {
     const service = new InterviewService(
       prisma as unknown as PrismaService,
       {} as AiService,
+      {} as HybridQuestionDetector,
     );
 
     await expect(service.endSession('user-a', 'session-a')).resolves.toEqual(
@@ -336,7 +374,7 @@ describe('InterviewService isolation', () => {
       },
     });
     expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
-    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -427,7 +465,7 @@ describe('InterviewService isolation', () => {
   });
 
   it('keeps confidence from 0.50 to 0.84 ambiguous without invoking the LLM', async () => {
-    const { service, prisma, tx, ai } = setupSession();
+    const { service, prisma, tx, ai, hybrid } = setupSession();
     prisma.transcriptChunk.findMany.mockResolvedValue([
       {
         id: 'chunk-1',
@@ -449,7 +487,76 @@ describe('InterviewService isolation', () => {
       answer: null,
     });
     expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
+    expect(hybrid.detect).toHaveBeenCalledTimes(1);
     expect(tx.suggestedResponse.create).not.toHaveBeenCalled();
+  });
+
+  it('persists an approved LLM detection before generating from its immutable question', async () => {
+    const { service, prisma, tx, ai, hybrid } = setupSession();
+    prisma.transcriptChunk.findMany.mockResolvedValue([
+      {
+        id: 'chunk-1',
+        content: 'como você acompanha uma entrega depois da publicação',
+        sequence: 1,
+      },
+    ]);
+    hybrid.detect.mockResolvedValue({
+      status: 'DETECTED',
+      question: 'como você acompanha uma entrega depois da publicação',
+      confidence: 0.82,
+      evidence: [
+        {
+          chunkId: 'chunk-1',
+          sequence: 1,
+          excerpt: 'como você acompanha uma entrega depois da publicação',
+        },
+      ],
+      source: 'LLM',
+      detectorVersion: 'hybrid-v1',
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+      approved: true,
+    });
+    ai.generateSuggestedAnswer.mockResolvedValue({
+      detectedQuestion: 'pergunta alterada pelo gerador',
+      suggestedAnswer: 'Resposta baseada no contexto.',
+      shortVersion: 'Resposta curta.',
+      keyPoints: ['APIs'],
+      strategicNote: 'Seja objetivo.',
+    });
+
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).resolves.toMatchObject({
+      status: 'ANSWER_READY',
+      detection: {
+        source: 'LLM',
+        detectorVersion: 'hybrid-v1',
+        provider: 'gemini',
+        model: 'gemini-2.0-flash',
+      },
+      answer: {
+        detectedQuestion:
+          'como você acompanha uma entrega depois da publicação',
+      },
+    });
+    expect(
+      tx.questionDetection.create.mock.invocationCallOrder[0],
+    ).toBeLessThan(tx.suggestedResponse.create.mock.invocationCallOrder[0]);
+    expect(ai.generateSuggestedAnswer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detectedQuestion:
+          'como você acompanha uma entrega depois da publicação',
+      }),
+    );
+    expect(tx.suggestedResponse.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          detectedQuestion:
+            'como você acompanha uma entrega depois da publicação',
+        }) as unknown,
+      }),
+    );
   });
 
   it('uses an explicit trimmed question instead of the detected question', async () => {

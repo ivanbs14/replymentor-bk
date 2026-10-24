@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -26,10 +27,8 @@ import type {
   GenerateResponseResult,
   QuestionDetectionEvidence,
 } from './question-detection.types';
-import {
-  DETERMINISTIC_QUESTION_DETECTOR_VERSION,
-  detectLatestQuestion,
-} from './question-detection/deterministic-question-detector';
+import { detectLatestQuestion } from './question-detection/deterministic-question-detector';
+import { HybridQuestionDetector } from './question-detection/hybrid-question-detector';
 
 type LockedSession = {
   id: string;
@@ -39,15 +38,18 @@ type LockedSession = {
 
 @Injectable()
 export class InterviewService {
+  private readonly logger = new Logger(InterviewService.name);
   private readonly maxChunksForGeneration = 8;
-  private readonly generationInFlight = new Map<
-    string,
-    { fingerprint: string; promise: Promise<GenerateResponseResult> }
-  >();
+  private readonly generationTransactionTimeoutMs =
+    Math.max(Number(process.env.LLM_TIMEOUT_MS ?? '45000') || 45_000, 5_000) +
+    2_000;
+  private readonly sessionTransactionTimeoutMs =
+    this.generationTransactionTimeoutMs * 2 + 2_000;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly ai: AiService,
+    private readonly hybridQuestionDetector: HybridQuestionDetector,
   ) {}
 
   async createContext(userId: string, payload: CreateInterviewContextDto) {
@@ -173,38 +175,70 @@ export class InterviewService {
       mimeType: payload.mimeType,
     });
 
-    return this.prisma.$transaction(async (tx) => {
-      const locked = await this.lockOwnedSession(tx, userId, sessionId);
-      const replay = await tx.transcriptChunk.findFirst({
-        where: { sessionId, idempotencyKey },
-      });
-      if (replay) {
-        this.assertMatchingFingerprint(
-          replay.requestFingerprint,
-          requestFingerprint,
-        );
-        return replay;
-      }
-      this.assertActive(locked.status);
+    return this.prisma.$transaction(
+      async (tx) => {
+        const locked = await this.lockOwnedSession(tx, userId, sessionId);
+        const replay = await tx.transcriptChunk.findFirst({
+          where: { sessionId, idempotencyKey },
+        });
+        if (replay) {
+          this.assertMatchingFingerprint(
+            replay.requestFingerprint,
+            requestFingerprint,
+          );
+          return replay;
+        }
+        this.assertActive(locked.status);
 
-      await tx.interviewSession.update({
-        where: { id: sessionId },
-        data: { nextTranscriptSequence: { increment: 1 } },
-      });
-      return tx.transcriptChunk.create({
-        data: {
-          sessionId,
-          sequence: locked.nextTranscriptSequence,
-          content: transcript,
-          source: payload.transcript ? 'manual' : 'stt',
-          idempotencyKey,
-          requestFingerprint,
-        },
-      });
-    });
+        await tx.interviewSession.update({
+          where: { id: sessionId },
+          data: { nextTranscriptSequence: { increment: 1 } },
+        });
+        return tx.transcriptChunk.create({
+          data: {
+            sessionId,
+            sequence: locked.nextTranscriptSequence,
+            content: transcript,
+            source: payload.transcript ? 'manual' : 'stt',
+            idempotencyKey,
+            requestFingerprint,
+          },
+        });
+      },
+      { timeout: this.sessionTransactionTimeoutMs },
+    );
   }
 
   async generateResponse(
+    userId: string,
+    sessionId: string,
+    payload: GenerateResponseDto,
+    idempotencyKey: string,
+  ): Promise<GenerateResponseResult> {
+    const startedAt = performance.now();
+    let outcome: 'answer_ready' | 'needs_confirmation' | 'error' = 'error';
+    try {
+      const result = await this.generateResponseCycle(
+        userId,
+        sessionId,
+        payload,
+        idempotencyKey,
+      );
+      outcome =
+        result.status === 'ANSWER_READY'
+          ? 'answer_ready'
+          : 'needs_confirmation';
+      return result;
+    } finally {
+      this.logger.log({
+        operation: 'generate_response',
+        outcome,
+        durationMs: performance.now() - startedAt,
+      });
+    }
+  }
+
+  private async generateResponseCycle(
     userId: string,
     sessionId: string,
     payload: GenerateResponseDto,
@@ -237,204 +271,274 @@ export class InterviewService {
         existing.requestFingerprint,
         requestFingerprint,
       );
-      return this.toGenerationResult(existing);
-    }
-    const inFlightKey = `${sessionId}:${idempotencyKey}`;
-    const activeGeneration = this.generationInFlight.get(inFlightKey);
-    if (activeGeneration) {
-      this.assertMatchingFingerprint(
-        activeGeneration.fingerprint,
-        requestFingerprint,
-      );
-      return activeGeneration.promise;
-    }
-
-    const promise = (async (): Promise<GenerateResponseResult> => {
+      if (
+        existing.response ||
+        !this.isDetectionApproved(existing) ||
+        session.status === SessionStatus.CLOSED
+      ) {
+        return this.toGenerationResult(existing);
+      }
+    } else {
       this.assertActive(session.status);
+    }
 
-      const latestChunks = await this.prisma.transcriptChunk.findMany({
-        where: { sessionId },
-        orderBy: { sequence: 'desc' },
-        take: this.maxChunksForGeneration,
-      });
-      if (latestChunks.length === 0) {
-        throw new BadRequestException(
-          'Não há transcrição para gerar resposta.',
+    const detection =
+      existing ??
+      (await this.detectAndPersist({
+        userId,
+        sessionId,
+        forceQuestion: payload.forceQuestion?.trim(),
+        idempotencyKey,
+        requestFingerprint,
+      }));
+    if (!this.isDetectionApproved(detection)) {
+      return this.toGenerationResult(detection);
+    }
+    return this.generateAndPersist({
+      userId,
+      sessionId,
+      detectionId: detection.id,
+      idempotencyKey,
+      requestFingerprint,
+      context: session.context,
+      target,
+    });
+  }
+
+  private async detectAndPersist(input: {
+    userId: string;
+    sessionId: string;
+    forceQuestion?: string;
+    idempotencyKey: string;
+    requestFingerprint: string;
+  }) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        await this.lockGenerationPhase(
+          tx,
+          'detection',
+          input.sessionId,
+          input.idempotencyKey,
         );
-      }
-
-      const chunks = latestChunks.reverse();
-      const transcriptWindow = chunks.map((item) => item.content).join('\n');
-      const forcedQuestion = payload.forceQuestion?.trim();
-      const automaticDetection = forcedQuestion
-        ? null
-        : detectLatestQuestion(
-            chunks.map(({ id, sequence, content }) => ({
-              id,
-              sequence,
-              content,
-            })),
-          );
-
-      if (automaticDetection && automaticDetection.confidence < 0.85) {
-        const saved = await this.prisma.$transaction(async (tx) => {
-          const locked = await this.lockOwnedSession(tx, userId, sessionId);
-          const replay = await tx.questionDetection.findFirst({
-            where: { sessionId, idempotencyKey },
-            include: { response: true },
-          });
-          if (replay) {
-            this.assertMatchingFingerprint(
-              replay.requestFingerprint,
-              requestFingerprint,
-            );
-            return replay;
-          }
-          this.assertActive(locked.status);
-          const detection = await tx.questionDetection.create({
-            data: {
-              sessionId,
-              status:
-                automaticDetection.status === 'DETECTED'
-                  ? QuestionDetectionStatus.DETECTED
-                  : QuestionDetectionStatus.NOT_FOUND,
-              question: automaticDetection.question,
-              confidence: automaticDetection.confidence,
-              source: QuestionDetectionSource.DETERMINISTIC,
-              detectorVersion: automaticDetection.detectorVersion,
-              evidence: automaticDetection.evidence,
-              idempotencyKey,
-              requestFingerprint,
-            },
-          });
-          return { ...detection, response: null };
-        });
-        return this.toGenerationResult(saved);
-      }
-
-      const detectedQuestion =
-        forcedQuestion ?? automaticDetection?.question ?? null;
-      if (!detectedQuestion) {
-        throw new BadRequestException(
-          'Não foi possível determinar a pergunta.',
-        );
-      }
-
-      const generated = await this.ai.generateSuggestedAnswer({
-        context: {
-          resumeText: session.context.resumeText,
-          interviewType: session.context.interviewType,
-          jobLevel: session.context.jobLevel,
-          jobDescription: session.context.jobDescription,
-          companyName: session.context.companyName,
-          companySegment: session.context.companySegment ?? undefined,
-          responsePreference: session.context.responsePreference,
-          aiBehavior: session.context.aiBehavior ?? undefined,
-        },
-        detectedQuestion,
-        transcriptWindow,
-        provider: target.provider,
-        model: target.model,
-      });
-
-      const saved = await this.prisma.$transaction(async (tx) => {
-        const locked = await this.lockOwnedSession(tx, userId, sessionId);
         const replay = await tx.questionDetection.findFirst({
-          where: { sessionId, idempotencyKey },
+          where: {
+            sessionId: input.sessionId,
+            idempotencyKey: input.idempotencyKey,
+          },
           include: { response: true },
         });
         if (replay) {
           this.assertMatchingFingerprint(
             replay.requestFingerprint,
-            requestFingerprint,
+            input.requestFingerprint,
           );
           return replay;
         }
+        const locked = await this.lockOwnedSession(
+          tx,
+          input.userId,
+          input.sessionId,
+        );
         this.assertActive(locked.status);
-
-        const detection = await tx.questionDetection.create({
+        const latestChunks = await tx.transcriptChunk.findMany({
+          where: { sessionId: input.sessionId },
+          orderBy: { sequence: 'desc' },
+          take: this.maxChunksForGeneration,
+        });
+        if (latestChunks.length === 0) {
+          throw new BadRequestException(
+            'Não há transcrição para gerar resposta.',
+          );
+        }
+        const chunks = [...latestChunks]
+          .reverse()
+          .map(({ id, sequence, content }) => ({ id, sequence, content }));
+        const decision = input.forceQuestion
+          ? {
+              status: 'DETECTED' as const,
+              question: input.forceQuestion,
+              confidence: null,
+              evidence: [],
+              source: 'MANUAL' as const,
+              detectorVersion: 'manual-v1',
+              provider: null,
+              model: null,
+            }
+          : await this.hybridQuestionDetector.detect(
+              chunks,
+              detectLatestQuestion(chunks),
+            );
+        const stillActive = await this.lockOwnedSession(
+          tx,
+          input.userId,
+          input.sessionId,
+        );
+        this.assertActive(stillActive.status);
+        const saved = await tx.questionDetection.create({
           data: {
-            sessionId,
-            status: QuestionDetectionStatus.DETECTED,
-            question: detectedQuestion,
-            confidence: forcedQuestion ? null : automaticDetection?.confidence,
-            source: forcedQuestion
-              ? QuestionDetectionSource.MANUAL
-              : QuestionDetectionSource.DETERMINISTIC,
-            detectorVersion: forcedQuestion
-              ? 'manual-v1'
-              : DETERMINISTIC_QUESTION_DETECTOR_VERSION,
-            evidence: forcedQuestion
-              ? []
-              : (automaticDetection?.evidence ?? []),
-            idempotencyKey,
-            requestFingerprint,
+            sessionId: input.sessionId,
+            status:
+              decision.status === 'DETECTED'
+                ? QuestionDetectionStatus.DETECTED
+                : QuestionDetectionStatus.NOT_FOUND,
+            question: decision.question,
+            confidence: decision.confidence,
+            source:
+              decision.source === 'LLM'
+                ? QuestionDetectionSource.LLM
+                : decision.source === 'MANUAL'
+                  ? QuestionDetectionSource.MANUAL
+                  : QuestionDetectionSource.DETERMINISTIC,
+            detectorVersion: decision.detectorVersion,
+            evidence: decision.evidence,
+            provider: decision.provider ?? null,
+            model: decision.model ?? null,
+            idempotencyKey: input.idempotencyKey,
+            requestFingerprint: input.requestFingerprint,
           },
+        });
+        return { ...saved, response: null };
+      },
+      { timeout: this.sessionTransactionTimeoutMs },
+    );
+  }
+
+  private async generateAndPersist(input: {
+    userId: string;
+    sessionId: string;
+    detectionId: string;
+    idempotencyKey: string;
+    requestFingerprint: string;
+    context: {
+      resumeText: string;
+      interviewType: string;
+      jobLevel: string;
+      jobDescription: string;
+      companyName: string;
+      companySegment: string | null;
+      responsePreference: string;
+      aiBehavior: string | null;
+    };
+    target: { provider: 'gemini' | 'openai' | 'ollama'; model: string };
+  }): Promise<GenerateResponseResult> {
+    const saved = await this.prisma.$transaction(
+      async (tx) => {
+        await this.lockGenerationPhase(
+          tx,
+          'generation',
+          input.sessionId,
+          input.idempotencyKey,
+        );
+        const detection = await tx.questionDetection.findFirst({
+          where: {
+            id: input.detectionId,
+            sessionId: input.sessionId,
+            idempotencyKey: input.idempotencyKey,
+          },
+          include: { response: true },
+        });
+        if (!detection) throw new NotFoundException('Detecção não encontrada.');
+        this.assertMatchingFingerprint(
+          detection.requestFingerprint,
+          input.requestFingerprint,
+        );
+        if (detection.response || !this.isDetectionApproved(detection)) {
+          return detection;
+        }
+        const locked = await this.lockOwnedSession(
+          tx,
+          input.userId,
+          input.sessionId,
+        );
+        this.assertActive(locked.status);
+        const chunks = await tx.transcriptChunk.findMany({
+          where: { sessionId: input.sessionId },
+          orderBy: { sequence: 'desc' },
+          take: this.maxChunksForGeneration,
+        });
+        const detectedQuestion = detection.question!;
+        const generated = await this.ai.generateSuggestedAnswer({
+          context: {
+            ...input.context,
+            companySegment: input.context.companySegment ?? undefined,
+            aiBehavior: input.context.aiBehavior ?? undefined,
+          },
+          detectedQuestion,
+          transcriptWindow: [...chunks]
+            .reverse()
+            .map(({ content }) => content)
+            .join('\n'),
+          provider: input.target.provider,
+          model: input.target.model,
         });
         const response = await tx.suggestedResponse.create({
           data: {
-            sessionId,
+            sessionId: input.sessionId,
             detectionId: detection.id,
             detectedQuestion,
             suggestedAnswer: generated.suggestedAnswer,
             shortVersion: generated.shortVersion,
             keyPoints: generated.keyPoints,
             strategicNote: generated.strategicNote,
-            idempotencyKey,
-            requestFingerprint,
+            idempotencyKey: input.idempotencyKey,
+            requestFingerprint: input.requestFingerprint,
           },
         });
         return { ...detection, response };
-      });
+      },
+      { timeout: this.sessionTransactionTimeoutMs },
+    );
+    return this.toGenerationResult(saved);
+  }
 
-      return this.toGenerationResult(saved);
-    })();
-    this.generationInFlight.set(inFlightKey, {
-      fingerprint: requestFingerprint,
-      promise,
-    });
-    try {
-      return await promise;
-    } finally {
-      if (this.generationInFlight.get(inFlightKey)?.promise === promise) {
-        this.generationInFlight.delete(inFlightKey);
-      }
-    }
+  private async lockGenerationPhase(
+    tx: Prisma.TransactionClient,
+    phase: 'detection' | 'generation',
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<void> {
+    const phaseKey = `${phase}:${sessionId}:${idempotencyKey}`;
+    await tx.$queryRaw(Prisma.sql`
+      SELECT pg_advisory_xact_lock(hashtextextended(${phaseKey}, 0))::text AS "lock"
+    `);
   }
 
   async endSession(userId: string, sessionId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const session = await this.lockOwnedSession(tx, userId, sessionId);
-      if (session.status === SessionStatus.CLOSED) {
-        const existing = await tx.sessionSummary.findUnique({
-          where: { sessionId },
-        });
-        if (!existing) {
-          throw new NotFoundException('Resumo da sessão não encontrado.');
+    return this.prisma.$transaction(
+      async (tx) => {
+        const session = await this.lockOwnedSession(tx, userId, sessionId);
+        if (session.status === SessionStatus.CLOSED) {
+          const existing = await tx.sessionSummary.findUnique({
+            where: { sessionId },
+          });
+          if (!existing) {
+            throw new NotFoundException('Resumo da sessão não encontrado.');
+          }
+          return existing;
         }
-        return existing;
-      }
 
-      const responses = await tx.suggestedResponse.findMany({
-        where: { sessionId },
-        orderBy: { createdAt: 'asc' },
-      });
-      const content =
-        responses.length === 0
-          ? 'Sessão encerrada sem respostas sugeridas registradas.'
-          : `Sessão encerrada com ${responses.length} respostas sugeridas.`;
-      const topics = responses
-        .map((response) => response.detectedQuestion)
-        .slice(-10);
+        const responses = await tx.suggestedResponse.findMany({
+          where: { sessionId },
+          orderBy: { createdAt: 'asc' },
+        });
+        const content =
+          responses.length === 0
+            ? 'Sessão encerrada sem respostas sugeridas registradas.'
+            : `Sessão encerrada com ${responses.length} respostas sugeridas.`;
+        const topics = responses
+          .map((response) => response.detectedQuestion)
+          .slice(-10);
 
-      await tx.interviewSession.update({
-        where: { id: sessionId },
-        data: { status: SessionStatus.CLOSED, endedAt: new Date() },
-      });
-      return tx.sessionSummary.create({
-        data: { sessionId, content, topics },
-      });
-    });
+        await tx.interviewSession.update({
+          where: { id: sessionId },
+          data: { status: SessionStatus.CLOSED, endedAt: new Date() },
+        });
+        return tx.sessionSummary.create({
+          data: { sessionId, content, topics },
+        });
+      },
+      { timeout: this.sessionTransactionTimeoutMs },
+    );
   }
 
   async getSummary(userId: string, sessionId: string) {
@@ -513,6 +617,28 @@ export class InterviewService {
         : [];
     return expectedTargets.some((expected) =>
       fields.some((field) => field.includes(expected)),
+    );
+  }
+
+  private isDetectionApproved(detection: {
+    status: QuestionDetectionStatus;
+    question: string | null;
+    confidence: number | null;
+    source: QuestionDetectionSource;
+  }): boolean {
+    if (
+      detection.status !== QuestionDetectionStatus.DETECTED ||
+      !detection.question
+    ) {
+      return false;
+    }
+    if (detection.source === QuestionDetectionSource.MANUAL) return true;
+    if (detection.source === QuestionDetectionSource.DETERMINISTIC) {
+      return (detection.confidence ?? 0) >= 0.85;
+    }
+    return (
+      detection.source === QuestionDetectionSource.LLM &&
+      (detection.confidence ?? 0) >= 0.7
     );
   }
 

@@ -1,0 +1,4225 @@
+{
+  "detectorVersion": "hybrid-v1",
+  "provider": "gemini",
+  "model": "gemini-2.0-flash",
+  "generatedAt": "2026-10-23T19:01:12.107Z",
+  "environment": {
+    "node": "v23.11.0",
+    "platform": "darwin",
+    "release": "25.5.0",
+    "arch": "x64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz"
+  },
+  "scope": "Offline reviewed fixtures through the production Gemini adapter and hybrid orchestrator; validates contracts and routing, not remote model quality or persistence.",
+  "corpusSize": 120,
+  "fixtureCount": 27,
+  "metrics": {
+    "total": 120,
+    "correct": 120,
+    "normalizedAccuracy": 1,
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "truePositive": 105,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "trueNegative": 15,
+    "escalations": 27,
+    "regressions": 0,
+    "escalationRate": 0.225
+  },
+  "byBand": {
+    "direct": {
+      "total": 78,
+      "correct": 78,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 78,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 0,
+      "regressions": 0
+    },
+    "ambiguous": {
+      "total": 27,
+      "correct": 27,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 27,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 27,
+      "regressions": 0
+    },
+    "notFound": {
+      "total": 15,
+      "correct": 15,
+      "normalizedAccuracy": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0,
+      "truePositive": 0,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 15,
+      "escalations": 0,
+      "regressions": 0
+    }
+  },
+  "byCategory": {
+    "explicit_question_mark": {
+      "total": 20,
+      "correct": 20,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 20,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 0,
+      "regressions": 0
+    },
+    "without_punctuation": {
+      "total": 20,
+      "correct": 20,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 20,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 10,
+      "regressions": 0
+    },
+    "implicit_question": {
+      "total": 15,
+      "correct": 15,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 15,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 7,
+      "regressions": 0
+    },
+    "multiple_questions": {
+      "total": 15,
+      "correct": 15,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 15,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 0,
+      "regressions": 0
+    },
+    "candidate_after_question": {
+      "total": 20,
+      "correct": 20,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 20,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 5,
+      "regressions": 0
+    },
+    "noise": {
+      "total": 15,
+      "correct": 15,
+      "normalizedAccuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "truePositive": 15,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 0,
+      "escalations": 5,
+      "regressions": 0
+    },
+    "no_question": {
+      "total": 15,
+      "correct": 15,
+      "normalizedAccuracy": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0,
+      "truePositive": 0,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "trueNegative": 15,
+      "escalations": 0,
+      "regressions": 0
+    }
+  },
+  "benchmark": {
+    "warmUp": 100,
+    "measurements": 1000,
+    "loadProfile": "serial, concurrency=1, rotating through all 27 ambiguous cases",
+    "successes": 1000,
+    "failures": 0,
+    "latency": {
+      "simulatedExternalMs": {
+        "samples": 1000,
+        "p50Ms": 0.03583200000002762,
+        "p95Ms": 0.07001500000001215,
+        "maxMs": 2.3926989999999932
+      },
+      "localOverheadMs": {
+        "samples": 1000,
+        "p50Ms": 0.15028900000004342,
+        "p95Ms": 0.21199400000000423,
+        "maxMs": 3.399644999999964
+      },
+      "fullDetectionMs": {
+        "samples": 1000,
+        "p50Ms": 0.18859999999995125,
+        "p95Ms": 0.28098799999997937,
+        "maxMs": 3.43147799999997
+      },
+      "simulatedCycleMs": {
+        "samples": 1000,
+        "p50Ms": 0.19653299999993123,
+        "p95Ms": 0.2932789999999841,
+        "maxMs": 3.4388199999999642
+      }
+    },
+    "simulatedCycleScope": "deterministic detection + Gemini adapter + hybrid decision; excludes HTTP endpoint, database and answer generation",
+    "remoteExternalP95TargetMs": 1500,
+    "endpointP95TargetMs": 6000,
+    "remoteAndEndpointMeasurement": "not measured; informational operational targets requiring a separate manual remote run",
+    "failureLatencyPolicy": "Fault injections and timeouts are excluded from successful latency percentiles."
+  },
+  "faultInjection": {
+    "total": 12,
+    "outcomes": {
+      "timeout": {
+        "count": 6,
+        "rate": 0.5
+      },
+      "network_error": {
+        "count": 1,
+        "rate": 0.08333333333333333
+      },
+      "invalid_json": {
+        "count": 1,
+        "rate": 0.08333333333333333
+      },
+      "invalid_envelope": {
+        "count": 1,
+        "rate": 0.08333333333333333
+      },
+      "invalid_contract": {
+        "count": 1,
+        "rate": 0.08333333333333333
+      },
+      "low_confidence": {
+        "count": 1,
+        "rate": 0.08333333333333333
+      },
+      "not_found": {
+        "count": 1,
+        "rate": 0.08333333333333333
+      }
+    },
+    "timeouts": [
+      {
+        "outcome": "timeout",
+        "stage": "fetch",
+        "configuredTimeoutMs": 250,
+        "abortedAtMs": 250,
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "timeout",
+        "stage": "body",
+        "configuredTimeoutMs": 250,
+        "abortedAtMs": 250,
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "timeout",
+        "stage": "fetch",
+        "configuredTimeoutMs": 1000,
+        "abortedAtMs": 1000,
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "timeout",
+        "stage": "body",
+        "configuredTimeoutMs": 1000,
+        "abortedAtMs": 1000,
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "timeout",
+        "stage": "fetch",
+        "configuredTimeoutMs": 1500,
+        "abortedAtMs": 1500,
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "timeout",
+        "stage": "body",
+        "configuredTimeoutMs": 1500,
+        "abortedAtMs": 1500,
+        "calls": 1,
+        "passed": true
+      }
+    ],
+    "failures": [
+      {
+        "outcome": "network_error",
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "invalid_json",
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "invalid_envelope",
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "invalid_contract",
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "low_confidence",
+        "calls": 1,
+        "passed": true
+      },
+      {
+        "outcome": "not_found",
+        "calls": 1,
+        "passed": true
+      }
+    ],
+    "timeoutAbortRate": 1
+  },
+  "gates": {
+    "normalizedAccuracy": true,
+    "f1": true,
+    "directBaseline": true,
+    "notFoundBaseline": true,
+    "ambiguousIds": true,
+    "escalationRate": true,
+    "singleCall": true,
+    "localOverhead": true,
+    "timeoutBoundaryAndNoRetry": true,
+    "failureConfirmationAndNoRetry": true
+  },
+  "passed": true,
+  "ambiguousResults": [
+    {
+      "id": "without_punctuation-002",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "me explique sua forma de investigar incidentes",
+      "predictedQuestion": "me explique sua forma de investigar incidentes",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-002-chunk-1",
+          "sequence": 1,
+          "excerpt": "me explique sua forma de investigar incidentes"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 18.135470000000055,
+        "localOverheadMs": 1.2266699999998991,
+        "fullDetectionMs": 19.362139999999954,
+        "simulatedCycleMs": 19.375332999999955
+      }
+    },
+    {
+      "id": "without_punctuation-004",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você comunica uma decisão impopular",
+      "predictedQuestion": "como você comunica uma decisão impopular",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-004-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você comunica uma decisão impopular"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.22432600000001912,
+        "localOverheadMs": 0.30191100000001825,
+        "fullDetectionMs": 0.5262370000000374,
+        "simulatedCycleMs": 0.5405410000000757
+      }
+    },
+    {
+      "id": "without_punctuation-006",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você reduz riscos antes de uma entrega",
+      "predictedQuestion": "como você reduz riscos antes de uma entrega",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você reduz riscos antes de uma entrega"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.19048399999996946,
+        "localOverheadMs": 0.28283200000009856,
+        "fullDetectionMs": 0.473316000000068,
+        "simulatedCycleMs": 0.4888580000000502
+      }
+    },
+    {
+      "id": "without_punctuation-008",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você organiza uma revisão técnica",
+      "predictedQuestion": "como você organiza uma revisão técnica",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você organiza uma revisão técnica"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.16274800000007872,
+        "localOverheadMs": 0.3311919999998736,
+        "fullDetectionMs": 0.4939399999999523,
+        "simulatedCycleMs": 0.5080699999999752
+      }
+    },
+    {
+      "id": "without_punctuation-010",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você reage a uma mudança urgente",
+      "predictedQuestion": "como você reage a uma mudança urgente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você reage a uma mudança urgente"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.22738399999991543,
+        "localOverheadMs": 0.33273300000007566,
+        "fullDetectionMs": 0.5601169999999911,
+        "simulatedCycleMs": 0.5743830000000116
+      }
+    },
+    {
+      "id": "without_punctuation-012",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você identifica a causa de uma regressão",
+      "predictedQuestion": "como você identifica a causa de uma regressão",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você identifica a causa de uma regressão"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.1549209999999448,
+        "localOverheadMs": 0.3484930000000759,
+        "fullDetectionMs": 0.5034140000000207,
+        "simulatedCycleMs": 0.519410999999991
+      }
+    },
+    {
+      "id": "without_punctuation-014",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "o que você faria diante de métricas contraditórias",
+      "predictedQuestion": "o que você faria diante de métricas contraditórias",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você faria diante de métricas contraditórias"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.1510529999999335,
+        "localOverheadMs": 0.3503930000000537,
+        "fullDetectionMs": 0.5014459999999872,
+        "simulatedCycleMs": 0.5426150000000689
+      }
+    },
+    {
+      "id": "without_punctuation-016",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "predictedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-016-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual é sua estratégia para aprender um sistema existente"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.13202300000000378,
+        "localOverheadMs": 0.2726499999999987,
+        "fullDetectionMs": 0.4046730000000025,
+        "simulatedCycleMs": 0.41980100000000675
+      }
+    },
+    {
+      "id": "without_punctuation-018",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "me explique como você valida uma hipótese",
+      "predictedQuestion": "me explique como você valida uma hipótese",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-018-chunk-1",
+          "sequence": 1,
+          "excerpt": "me explique como você valida uma hipótese"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.8042659999999842,
+        "localOverheadMs": 0.5339199999999664,
+        "fullDetectionMs": 1.3381859999999506,
+        "simulatedCycleMs": 1.3536749999999529
+      }
+    },
+    {
+      "id": "without_punctuation-020",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você acompanha uma entrega depois da publicação",
+      "predictedQuestion": "como você acompanha uma entrega depois da publicação",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-020-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você acompanha uma entrega depois da publicação"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.23285699999996723,
+        "localOverheadMs": 0.39906200000007175,
+        "fullDetectionMs": 0.631919000000039,
+        "simulatedCycleMs": 0.6483040000000528
+      }
+    },
+    {
+      "id": "implicit_question-002",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Descreva uma decisão tomada com informações incompletas.",
+      "predictedQuestion": "Descreva uma decisão tomada com informações incompletas.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-002-chunk-1",
+          "sequence": 1,
+          "excerpt": "Descreva uma decisão tomada com informações incompletas."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.09382100000004812,
+        "localOverheadMs": 0.2488069999999425,
+        "fullDetectionMs": 0.3426279999999906,
+        "simulatedCycleMs": 0.3556469999999763
+      }
+    },
+    {
+      "id": "implicit_question-004",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Dê um exemplo de colaboração entre áreas.",
+      "predictedQuestion": "Dê um exemplo de colaboração entre áreas.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-004-chunk-1",
+          "sequence": 1,
+          "excerpt": "Dê um exemplo de colaboração entre áreas."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.09023200000001452,
+        "localOverheadMs": 0.20939499999997224,
+        "fullDetectionMs": 0.29962699999998677,
+        "simulatedCycleMs": 0.3096970000000283
+      }
+    },
+    {
+      "id": "implicit_question-006",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Mostre como você divide um problema complexo.",
+      "predictedQuestion": "Mostre como você divide um problema complexo.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "Mostre como você divide um problema complexo."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.08099100000004,
+        "localOverheadMs": 0.21338399999990543,
+        "fullDetectionMs": 0.29437499999994543,
+        "simulatedCycleMs": 0.3076810000000023
+      }
+    },
+    {
+      "id": "implicit_question-008",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Descreva seu processo para priorizar débitos técnicos.",
+      "predictedQuestion": "Descreva seu processo para priorizar débitos técnicos.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "Descreva seu processo para priorizar débitos técnicos."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07495399999993424,
+        "localOverheadMs": 0.21893400000010388,
+        "fullDetectionMs": 0.2938880000000381,
+        "simulatedCycleMs": 0.3070069999999987
+      }
+    },
+    {
+      "id": "implicit_question-010",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Dê um exemplo de melhoria contínua que você promoveu.",
+      "predictedQuestion": "Dê um exemplo de melhoria contínua que você promoveu.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "Dê um exemplo de melhoria contínua que você promoveu."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07621700000004239,
+        "localOverheadMs": 0.21585399999992205,
+        "fullDetectionMs": 0.29207099999996444,
+        "simulatedCycleMs": 0.3046049999999241
+      }
+    },
+    {
+      "id": "implicit_question-012",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Conte como você conduz uma investigação sem evidência inicial.",
+      "predictedQuestion": "Conte como você conduz uma investigação sem evidência inicial.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "Conte como você conduz uma investigação sem evidência inicial."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.13589100000001508,
+        "localOverheadMs": 0.229233000000022,
+        "fullDetectionMs": 0.3651240000000371,
+        "simulatedCycleMs": 0.3775259999999889
+      }
+    },
+    {
+      "id": "implicit_question-014",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Explique como você evita repetir uma falha.",
+      "predictedQuestion": "Explique como você evita repetir uma falha.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "Explique como você evita repetir uma falha."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07865500000002612,
+        "localOverheadMs": 0.20749899999998433,
+        "fullDetectionMs": 0.28615400000001046,
+        "simulatedCycleMs": 0.2984360000000379
+      }
+    },
+    {
+      "id": "candidate_after_question-012",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "como você atua quando falta contexto",
+      "predictedQuestion": "como você atua quando falta contexto",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você atua quando falta contexto"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.09993099999996957,
+        "localOverheadMs": 0.24792600000000675,
+        "fullDetectionMs": 0.3478569999999763,
+        "simulatedCycleMs": 0.36149999999997817
+      }
+    },
+    {
+      "id": "candidate_after_question-014",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "o que você busca em uma parceria de trabalho",
+      "predictedQuestion": "o que você busca em uma parceria de trabalho",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você busca em uma parceria de trabalho"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07859400000006644,
+        "localOverheadMs": 0.22617899999988822,
+        "fullDetectionMs": 0.30477299999995466,
+        "simulatedCycleMs": 0.31826200000000426
+      }
+    },
+    {
+      "id": "candidate_after_question-016",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "como você lida com prioridades concorrentes",
+      "predictedQuestion": "como você lida com prioridades concorrentes",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-016-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você lida com prioridades concorrentes"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.08164200000010169,
+        "localOverheadMs": 0.25647399999979825,
+        "fullDetectionMs": 0.33811599999989994,
+        "simulatedCycleMs": 0.3513399999999365
+      }
+    },
+    {
+      "id": "candidate_after_question-018",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "qual foi seu maior aprendizado recente",
+      "predictedQuestion": "qual foi seu maior aprendizado recente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-018-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual foi seu maior aprendizado recente"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0782130000000052,
+        "localOverheadMs": 0.25986199999999826,
+        "fullDetectionMs": 0.33807500000000346,
+        "simulatedCycleMs": 0.3523210000000745
+      }
+    },
+    {
+      "id": "candidate_after_question-020",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "o que você faz diante de um requisito ambíguo",
+      "predictedQuestion": "o que você faz diante de um requisito ambíguo",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-020-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você faz diante de um requisito ambíguo"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07334300000002258,
+        "localOverheadMs": 0.21256400000004305,
+        "fullDetectionMs": 0.28590700000006564,
+        "simulatedCycleMs": 0.29930799999999635
+      }
+    },
+    {
+      "id": "noise-006",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "predictedQuestion": "Qual abordagem você usa para investigar uma falha",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual abordagem você usa para investigar uma falha"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07183000000009088,
+        "localOverheadMs": 0.21436399999993228,
+        "fullDetectionMs": 0.28619400000002315,
+        "simulatedCycleMs": 0.29820700000004763
+      }
+    },
+    {
+      "id": "noise-008",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "predictedQuestion": "O que faz quando recebe requisitos incompletos",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que faz quando recebe requisitos incompletos"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0680810000000065,
+        "localOverheadMs": 0.23128800000006322,
+        "fullDetectionMs": 0.2993690000000697,
+        "simulatedCycleMs": 0.31228200000009565
+      }
+    },
+    {
+      "id": "noise-010",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "predictedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual é sua forma de colaborar com pessoas de outras áreas"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0866479999999683,
+        "localOverheadMs": 0.2868980000000647,
+        "fullDetectionMs": 0.373546000000033,
+        "simulatedCycleMs": 0.3865170000000262
+      }
+    },
+    {
+      "id": "noise-012",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "predictedQuestion": "O que você aprendeu ao trabalhar com sistemas legados",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você aprendeu ao trabalhar com sistemas legados"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07087899999999081,
+        "localOverheadMs": 0.22714499999995041,
+        "fullDetectionMs": 0.2980239999999412,
+        "simulatedCycleMs": 0.3116929999999911
+      }
+    },
+    {
+      "id": "noise-014",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "predictedQuestion": "Qual foi uma decisão técnica que você reconsiderou",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual foi uma decisão técnica que você reconsiderou"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0696020000000317,
+        "localOverheadMs": 0.21302300000002106,
+        "fullDetectionMs": 0.28262500000005275,
+        "simulatedCycleMs": 0.2956219999999803
+      }
+    }
+  ],
+  "results": [
+    {
+      "id": "explicit_question_mark-001",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "predictedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-001-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você organiza prioridades em uma semana intensa?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.2013369999999668,
+        "fullDetectionMs": 0.2013369999999668,
+        "simulatedCycleMs": 0.23954299999991235
+      }
+    },
+    {
+      "id": "explicit_question_mark-002",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "predictedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-002-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual foi o principal aprendizado de um projeto difícil?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.010339000000044507,
+        "fullDetectionMs": 0.010339000000044507,
+        "simulatedCycleMs": 0.025807999999983622
+      }
+    },
+    {
+      "id": "explicit_question_mark-003",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "predictedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-003-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você comunica um risco técnico para outras áreas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005844000000024607,
+        "fullDetectionMs": 0.005844000000024607,
+        "simulatedCycleMs": 0.03265299999998206
+      }
+    },
+    {
+      "id": "explicit_question_mark-004",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "O que você considera ao revisar uma solução?",
+      "predictedQuestion": "O que você considera ao revisar uma solução?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-004-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você considera ao revisar uma solução?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.007244000000014239,
+        "fullDetectionMs": 0.007244000000014239,
+        "simulatedCycleMs": 0.020307999999999993
+      }
+    },
+    {
+      "id": "explicit_question_mark-005",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você reage quando uma estimativa muda?",
+      "predictedQuestion": "Como você reage quando uma estimativa muda?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-005-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você reage quando uma estimativa muda?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.008342999999968015,
+        "fullDetectionMs": 0.008342999999968015,
+        "simulatedCycleMs": 0.03045299999996587
+      }
+    },
+    {
+      "id": "explicit_question_mark-006",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "predictedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual abordagem você usa para investigar uma falha?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004370999999991909,
+        "fullDetectionMs": 0.004370999999991909,
+        "simulatedCycleMs": 0.01645599999994829
+      }
+    },
+    {
+      "id": "explicit_question_mark-007",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você garante clareza em decisões técnicas?",
+      "predictedQuestion": "Como você garante clareza em decisões técnicas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-007-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você garante clareza em decisões técnicas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.007323000000042157,
+        "fullDetectionMs": 0.007323000000042157,
+        "simulatedCycleMs": 0.0287349999999833
+      }
+    },
+    {
+      "id": "explicit_question_mark-008",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "predictedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que faz quando recebe requisitos incompletos?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006863999999950465,
+        "fullDetectionMs": 0.006863999999950465,
+        "simulatedCycleMs": 0.016286999999920226
+      }
+    },
+    {
+      "id": "explicit_question_mark-009",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "predictedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-009-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você acompanha a qualidade de uma entrega?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006732999999940148,
+        "fullDetectionMs": 0.006732999999940148,
+        "simulatedCycleMs": 0.03148599999997259
+      }
+    },
+    {
+      "id": "explicit_question_mark-010",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "predictedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual é sua forma de colaborar com pessoas de outras áreas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.010946999999987383,
+        "fullDetectionMs": 0.010946999999987383,
+        "simulatedCycleMs": 0.02511600000002545
+      }
+    },
+    {
+      "id": "explicit_question_mark-011",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você decide entre velocidade e manutenção?",
+      "predictedQuestion": "Como você decide entre velocidade e manutenção?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-011-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você decide entre velocidade e manutenção?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005319999999983338,
+        "fullDetectionMs": 0.005319999999983338,
+        "simulatedCycleMs": 0.028038000000037755
+      }
+    },
+    {
+      "id": "explicit_question_mark-012",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "predictedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você aprendeu ao trabalhar com sistemas legados?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004499000000009801,
+        "fullDetectionMs": 0.004499000000009801,
+        "simulatedCycleMs": 0.01611400000001595
+      }
+    },
+    {
+      "id": "explicit_question_mark-013",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você conduz uma conversa sobre divergências?",
+      "predictedQuestion": "Como você conduz uma conversa sobre divergências?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-013-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você conduz uma conversa sobre divergências?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.007050000000049295,
+        "fullDetectionMs": 0.007050000000049295,
+        "simulatedCycleMs": 0.026985999999965316
+      }
+    },
+    {
+      "id": "explicit_question_mark-014",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "predictedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual foi uma decisão técnica que você reconsiderou?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006247000000030312,
+        "fullDetectionMs": 0.006247000000030312,
+        "simulatedCycleMs": 0.014280999999982669
+      }
+    },
+    {
+      "id": "explicit_question_mark-015",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você estrutura uma investigação de desempenho?",
+      "predictedQuestion": "Como você estrutura uma investigação de desempenho?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-015-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você estrutura uma investigação de desempenho?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004271000000017011,
+        "fullDetectionMs": 0.004271000000017011,
+        "simulatedCycleMs": 0.023259000000052765
+      }
+    },
+    {
+      "id": "explicit_question_mark-016",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "O que costuma observar antes de publicar uma mudança?",
+      "predictedQuestion": "O que costuma observar antes de publicar uma mudança?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-016-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que costuma observar antes de publicar uma mudança?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0038419999999632637,
+        "fullDetectionMs": 0.0038419999999632637,
+        "simulatedCycleMs": 0.014497000000005755
+      }
+    },
+    {
+      "id": "explicit_question_mark-017",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você compartilha conhecimento com a equipe?",
+      "predictedQuestion": "Como você compartilha conhecimento com a equipe?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-017-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você compartilha conhecimento com a equipe?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.00670100000002094,
+        "fullDetectionMs": 0.00670100000002094,
+        "simulatedCycleMs": 0.02512800000010884
+      }
+    },
+    {
+      "id": "explicit_question_mark-018",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Qual é seu processo para entender um domínio novo?",
+      "predictedQuestion": "Qual é seu processo para entender um domínio novo?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-018-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual é seu processo para entender um domínio novo?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.003853000000049178,
+        "fullDetectionMs": 0.003853000000049178,
+        "simulatedCycleMs": 0.014016999999967084
+      }
+    },
+    {
+      "id": "explicit_question_mark-019",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "Como você mede se uma solução resolveu o problema?",
+      "predictedQuestion": "Como você mede se uma solução resolveu o problema?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-019-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você mede se uma solução resolveu o problema?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004215000000044711,
+        "fullDetectionMs": 0.004215000000044711,
+        "simulatedCycleMs": 0.023020999999971536
+      }
+    },
+    {
+      "id": "explicit_question_mark-020",
+      "category": "explicit_question_mark",
+      "band": "direct",
+      "expectedQuestion": "O que você espera de uma boa revisão de código?",
+      "predictedQuestion": "O que você espera de uma boa revisão de código?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "explicit_question_mark-020-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você espera de uma boa revisão de código?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006062000000042644,
+        "fullDetectionMs": 0.006062000000042644,
+        "simulatedCycleMs": 0.016612000000009175
+      }
+    },
+    {
+      "id": "without_punctuation-001",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "como você lida com prioridades concorrentes",
+      "predictedQuestion": "como você lida com prioridades concorrentes",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-001-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você lida com prioridades concorrentes"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.00423399999999674,
+        "fullDetectionMs": 0.00423399999999674,
+        "simulatedCycleMs": 0.022403000000053908
+      }
+    },
+    {
+      "id": "without_punctuation-002",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "me explique sua forma de investigar incidentes",
+      "predictedQuestion": "me explique sua forma de investigar incidentes",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-002-chunk-1",
+          "sequence": 1,
+          "excerpt": "me explique sua forma de investigar incidentes"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 18.135470000000055,
+        "localOverheadMs": 1.2266699999998991,
+        "fullDetectionMs": 19.362139999999954,
+        "simulatedCycleMs": 19.375332999999955
+      }
+    },
+    {
+      "id": "without_punctuation-003",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "qual foi seu maior aprendizado recente",
+      "predictedQuestion": "qual foi seu maior aprendizado recente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-003-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual foi seu maior aprendizado recente"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.007199000000014166,
+        "fullDetectionMs": 0.007199000000014166,
+        "simulatedCycleMs": 0.04553499999997257
+      }
+    },
+    {
+      "id": "without_punctuation-004",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você comunica uma decisão impopular",
+      "predictedQuestion": "como você comunica uma decisão impopular",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-004-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você comunica uma decisão impopular"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.22432600000001912,
+        "localOverheadMs": 0.30191100000001825,
+        "fullDetectionMs": 0.5262370000000374,
+        "simulatedCycleMs": 0.5405410000000757
+      }
+    },
+    {
+      "id": "without_punctuation-005",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "o que você faz diante de um requisito ambíguo",
+      "predictedQuestion": "o que você faz diante de um requisito ambíguo",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-005-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você faz diante de um requisito ambíguo"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006547999999952481,
+        "fullDetectionMs": 0.006547999999952481,
+        "simulatedCycleMs": 0.0326870000000099
+      }
+    },
+    {
+      "id": "without_punctuation-006",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você reduz riscos antes de uma entrega",
+      "predictedQuestion": "como você reduz riscos antes de uma entrega",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você reduz riscos antes de uma entrega"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.19048399999996946,
+        "localOverheadMs": 0.28283200000009856,
+        "fullDetectionMs": 0.473316000000068,
+        "simulatedCycleMs": 0.4888580000000502
+      }
+    },
+    {
+      "id": "without_punctuation-007",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "qual abordagem usa para estimar tarefas",
+      "predictedQuestion": "qual abordagem usa para estimar tarefas",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-007-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual abordagem usa para estimar tarefas"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006641000000058739,
+        "fullDetectionMs": 0.006641000000058739,
+        "simulatedCycleMs": 0.03247800000008283
+      }
+    },
+    {
+      "id": "without_punctuation-008",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você organiza uma revisão técnica",
+      "predictedQuestion": "como você organiza uma revisão técnica",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você organiza uma revisão técnica"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.16274800000007872,
+        "localOverheadMs": 0.3311919999998736,
+        "fullDetectionMs": 0.4939399999999523,
+        "simulatedCycleMs": 0.5080699999999752
+      }
+    },
+    {
+      "id": "without_punctuation-009",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "o que considera ao escolher uma ferramenta",
+      "predictedQuestion": "o que considera ao escolher uma ferramenta",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-009-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que considera ao escolher uma ferramenta"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.011684000000059314,
+        "fullDetectionMs": 0.011684000000059314,
+        "simulatedCycleMs": 0.038320999999996275
+      }
+    },
+    {
+      "id": "without_punctuation-010",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você reage a uma mudança urgente",
+      "predictedQuestion": "como você reage a uma mudança urgente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você reage a uma mudança urgente"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.22738399999991543,
+        "localOverheadMs": 0.33273300000007566,
+        "fullDetectionMs": 0.5601169999999911,
+        "simulatedCycleMs": 0.5743830000000116
+      }
+    },
+    {
+      "id": "without_punctuation-011",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "qual foi uma situação em que precisou negociar escopo",
+      "predictedQuestion": "qual foi uma situação em que precisou negociar escopo",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-011-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual foi uma situação em que precisou negociar escopo"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005093999999985499,
+        "fullDetectionMs": 0.005093999999985499,
+        "simulatedCycleMs": 0.0821690000000217
+      }
+    },
+    {
+      "id": "without_punctuation-012",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você identifica a causa de uma regressão",
+      "predictedQuestion": "como você identifica a causa de uma regressão",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você identifica a causa de uma regressão"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.1549209999999448,
+        "localOverheadMs": 0.3484930000000759,
+        "fullDetectionMs": 0.5034140000000207,
+        "simulatedCycleMs": 0.519410999999991
+      }
+    },
+    {
+      "id": "without_punctuation-013",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "me conte como você melhora um processo da equipe",
+      "predictedQuestion": "me conte como você melhora um processo da equipe",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-013-chunk-1",
+          "sequence": 1,
+          "excerpt": "me conte como você melhora um processo da equipe"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.00565900000003694,
+        "fullDetectionMs": 0.00565900000003694,
+        "simulatedCycleMs": 0.06385199999999713
+      }
+    },
+    {
+      "id": "without_punctuation-014",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "o que você faria diante de métricas contraditórias",
+      "predictedQuestion": "o que você faria diante de métricas contraditórias",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você faria diante de métricas contraditórias"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.1510529999999335,
+        "localOverheadMs": 0.3503930000000537,
+        "fullDetectionMs": 0.5014459999999872,
+        "simulatedCycleMs": 0.5426150000000689
+      }
+    },
+    {
+      "id": "without_punctuation-015",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "como você documenta uma decisão importante",
+      "predictedQuestion": "como você documenta uma decisão importante",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-015-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você documenta uma decisão importante"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0034440000000586224,
+        "fullDetectionMs": 0.0034440000000586224,
+        "simulatedCycleMs": 0.03522200000008979
+      }
+    },
+    {
+      "id": "without_punctuation-016",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "predictedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-016-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual é sua estratégia para aprender um sistema existente"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.13202300000000378,
+        "localOverheadMs": 0.2726499999999987,
+        "fullDetectionMs": 0.4046730000000025,
+        "simulatedCycleMs": 0.41980100000000675
+      }
+    },
+    {
+      "id": "without_punctuation-017",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "como você atua quando falta contexto",
+      "predictedQuestion": "como você atua quando falta contexto",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-017-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você atua quando falta contexto"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0057189999999991414,
+        "fullDetectionMs": 0.0057189999999991414,
+        "simulatedCycleMs": 0.034072999999921194
+      }
+    },
+    {
+      "id": "without_punctuation-018",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "me explique como você valida uma hipótese",
+      "predictedQuestion": "me explique como você valida uma hipótese",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-018-chunk-1",
+          "sequence": 1,
+          "excerpt": "me explique como você valida uma hipótese"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.8042659999999842,
+        "localOverheadMs": 0.5339199999999664,
+        "fullDetectionMs": 1.3381859999999506,
+        "simulatedCycleMs": 1.3536749999999529
+      }
+    },
+    {
+      "id": "without_punctuation-019",
+      "category": "without_punctuation",
+      "band": "direct",
+      "expectedQuestion": "o que você busca em uma parceria de trabalho",
+      "predictedQuestion": "o que você busca em uma parceria de trabalho",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-019-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você busca em uma parceria de trabalho"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.00606300000004012,
+        "fullDetectionMs": 0.00606300000004012,
+        "simulatedCycleMs": 0.03592500000002019
+      }
+    },
+    {
+      "id": "without_punctuation-020",
+      "category": "without_punctuation",
+      "band": "ambiguous",
+      "expectedQuestion": "como você acompanha uma entrega depois da publicação",
+      "predictedQuestion": "como você acompanha uma entrega depois da publicação",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "without_punctuation-020-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você acompanha uma entrega depois da publicação"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.23285699999996723,
+        "localOverheadMs": 0.39906200000007175,
+        "fullDetectionMs": 0.631919000000039,
+        "simulatedCycleMs": 0.6483040000000528
+      }
+    },
+    {
+      "id": "implicit_question-001",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Conte sobre uma situação em que você precisou adaptar o plano.",
+      "predictedQuestion": "Conte sobre uma situação em que você precisou adaptar o plano.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-001-chunk-1",
+          "sequence": 1,
+          "excerpt": "Conte sobre uma situação em que você precisou adaptar o plano."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0033030000000735527,
+        "fullDetectionMs": 0.0033030000000735527,
+        "simulatedCycleMs": 0.029658000000040374
+      }
+    },
+    {
+      "id": "implicit_question-002",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Descreva uma decisão tomada com informações incompletas.",
+      "predictedQuestion": "Descreva uma decisão tomada com informações incompletas.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-002-chunk-1",
+          "sequence": 1,
+          "excerpt": "Descreva uma decisão tomada com informações incompletas."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.09382100000004812,
+        "localOverheadMs": 0.2488069999999425,
+        "fullDetectionMs": 0.3426279999999906,
+        "simulatedCycleMs": 0.3556469999999763
+      }
+    },
+    {
+      "id": "implicit_question-003",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Explique como você prepara uma mudança de alto risco.",
+      "predictedQuestion": "Explique como você prepara uma mudança de alto risco.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-003-chunk-1",
+          "sequence": 1,
+          "excerpt": "Explique como você prepara uma mudança de alto risco."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0032509999999774664,
+        "fullDetectionMs": 0.0032509999999774664,
+        "simulatedCycleMs": 0.02795400000002246
+      }
+    },
+    {
+      "id": "implicit_question-004",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Dê um exemplo de colaboração entre áreas.",
+      "predictedQuestion": "Dê um exemplo de colaboração entre áreas.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-004-chunk-1",
+          "sequence": 1,
+          "excerpt": "Dê um exemplo de colaboração entre áreas."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.09023200000001452,
+        "localOverheadMs": 0.20939499999997224,
+        "fullDetectionMs": 0.29962699999998677,
+        "simulatedCycleMs": 0.3096970000000283
+      }
+    },
+    {
+      "id": "implicit_question-005",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Fale sobre um aprendizado obtido após um erro.",
+      "predictedQuestion": "Fale sobre um aprendizado obtido após um erro.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-005-chunk-1",
+          "sequence": 1,
+          "excerpt": "Fale sobre um aprendizado obtido após um erro."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006767999999965468,
+        "fullDetectionMs": 0.006767999999965468,
+        "simulatedCycleMs": 0.027760000000057516
+      }
+    },
+    {
+      "id": "implicit_question-006",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Mostre como você divide um problema complexo.",
+      "predictedQuestion": "Mostre como você divide um problema complexo.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "Mostre como você divide um problema complexo."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.08099100000004,
+        "localOverheadMs": 0.21338399999990543,
+        "fullDetectionMs": 0.29437499999994543,
+        "simulatedCycleMs": 0.3076810000000023
+      }
+    },
+    {
+      "id": "implicit_question-007",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Conte como você reage a uma revisão crítica.",
+      "predictedQuestion": "Conte como você reage a uma revisão crítica.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-007-chunk-1",
+          "sequence": 1,
+          "excerpt": "Conte como você reage a uma revisão crítica."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006250000000022737,
+        "fullDetectionMs": 0.006250000000022737,
+        "simulatedCycleMs": 0.027925999999979467
+      }
+    },
+    {
+      "id": "implicit_question-008",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Descreva seu processo para priorizar débitos técnicos.",
+      "predictedQuestion": "Descreva seu processo para priorizar débitos técnicos.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "Descreva seu processo para priorizar débitos técnicos."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07495399999993424,
+        "localOverheadMs": 0.21893400000010388,
+        "fullDetectionMs": 0.2938880000000381,
+        "simulatedCycleMs": 0.3070069999999987
+      }
+    },
+    {
+      "id": "implicit_question-009",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Explique como você valida uma solução antes de entregá-la.",
+      "predictedQuestion": "Explique como você valida uma solução antes de entregá-la.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-009-chunk-1",
+          "sequence": 1,
+          "excerpt": "Explique como você valida uma solução antes de entregá-la."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005901999999991858,
+        "fullDetectionMs": 0.005901999999991858,
+        "simulatedCycleMs": 0.029840999999919404
+      }
+    },
+    {
+      "id": "implicit_question-010",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Dê um exemplo de melhoria contínua que você promoveu.",
+      "predictedQuestion": "Dê um exemplo de melhoria contínua que você promoveu.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "Dê um exemplo de melhoria contínua que você promoveu."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07621700000004239,
+        "localOverheadMs": 0.21585399999992205,
+        "fullDetectionMs": 0.29207099999996444,
+        "simulatedCycleMs": 0.3046049999999241
+      }
+    },
+    {
+      "id": "implicit_question-011",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Fale sobre uma ocasião em que mudou de opinião.",
+      "predictedQuestion": "Fale sobre uma ocasião em que mudou de opinião.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-011-chunk-1",
+          "sequence": 1,
+          "excerpt": "Fale sobre uma ocasião em que mudou de opinião."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0031289999999444262,
+        "fullDetectionMs": 0.0031289999999444262,
+        "simulatedCycleMs": 0.036789999999996326
+      }
+    },
+    {
+      "id": "implicit_question-012",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Conte como você conduz uma investigação sem evidência inicial.",
+      "predictedQuestion": "Conte como você conduz uma investigação sem evidência inicial.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "Conte como você conduz uma investigação sem evidência inicial."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.13589100000001508,
+        "localOverheadMs": 0.229233000000022,
+        "fullDetectionMs": 0.3651240000000371,
+        "simulatedCycleMs": 0.3775259999999889
+      }
+    },
+    {
+      "id": "implicit_question-013",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Descreva como você alinha expectativas com outras pessoas.",
+      "predictedQuestion": "Descreva como você alinha expectativas com outras pessoas.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-013-chunk-1",
+          "sequence": 1,
+          "excerpt": "Descreva como você alinha expectativas com outras pessoas."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0031249999999545253,
+        "fullDetectionMs": 0.0031249999999545253,
+        "simulatedCycleMs": 0.02759800000001178
+      }
+    },
+    {
+      "id": "implicit_question-014",
+      "category": "implicit_question",
+      "band": "ambiguous",
+      "expectedQuestion": "Explique como você evita repetir uma falha.",
+      "predictedQuestion": "Explique como você evita repetir uma falha.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "Explique como você evita repetir uma falha."
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07865500000002612,
+        "localOverheadMs": 0.20749899999998433,
+        "fullDetectionMs": 0.28615400000001046,
+        "simulatedCycleMs": 0.2984360000000379
+      }
+    },
+    {
+      "id": "implicit_question-015",
+      "category": "implicit_question",
+      "band": "direct",
+      "expectedQuestion": "Dê um exemplo de decisão orientada por dados.",
+      "predictedQuestion": "Dê um exemplo de decisão orientada por dados.",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "implicit_question-015-chunk-1",
+          "sequence": 1,
+          "excerpt": "Dê um exemplo de decisão orientada por dados."
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.008510000000001128,
+        "fullDetectionMs": 0.008510000000001128,
+        "simulatedCycleMs": 0.03177799999991748
+      }
+    },
+    {
+      "id": "multiple_questions-001",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "predictedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-001-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você organiza prioridades em uma semana intensa?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.002722999999946296,
+        "fullDetectionMs": 0.002722999999946296,
+        "simulatedCycleMs": 0.039008999999964544
+      }
+    },
+    {
+      "id": "multiple_questions-002",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "predictedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-002-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual foi o principal aprendizado de um projeto difícil?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004303000000049906,
+        "fullDetectionMs": 0.004303000000049906,
+        "simulatedCycleMs": 0.018638000000009924
+      }
+    },
+    {
+      "id": "multiple_questions-003",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "predictedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-003-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você comunica um risco técnico para outras áreas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005038000000013199,
+        "fullDetectionMs": 0.005038000000013199,
+        "simulatedCycleMs": 0.03505900000004658
+      }
+    },
+    {
+      "id": "multiple_questions-004",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "O que você considera ao revisar uma solução?",
+      "predictedQuestion": "O que você considera ao revisar uma solução?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-004-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você considera ao revisar uma solução?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005557000000067092,
+        "fullDetectionMs": 0.005557000000067092,
+        "simulatedCycleMs": 0.01782900000000609
+      }
+    },
+    {
+      "id": "multiple_questions-005",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você reage quando uma estimativa muda?",
+      "predictedQuestion": "Como você reage quando uma estimativa muda?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-005-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você reage quando uma estimativa muda?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005051999999977852,
+        "fullDetectionMs": 0.005051999999977852,
+        "simulatedCycleMs": 0.035052000000064254
+      }
+    },
+    {
+      "id": "multiple_questions-006",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "predictedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual abordagem você usa para investigar uma falha?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.002112000000010994,
+        "fullDetectionMs": 0.002112000000010994,
+        "simulatedCycleMs": 0.01565400000004047
+      }
+    },
+    {
+      "id": "multiple_questions-007",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você garante clareza em decisões técnicas?",
+      "predictedQuestion": "Como você garante clareza em decisões técnicas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-007-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você garante clareza em decisões técnicas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005083000000013271,
+        "fullDetectionMs": 0.005083000000013271,
+        "simulatedCycleMs": 0.034092999999984386
+      }
+    },
+    {
+      "id": "multiple_questions-008",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "predictedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que faz quando recebe requisitos incompletos?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.002262999999970816,
+        "fullDetectionMs": 0.002262999999970816,
+        "simulatedCycleMs": 0.016428000000018983
+      }
+    },
+    {
+      "id": "multiple_questions-009",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "predictedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-009-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você acompanha a qualidade de uma entrega?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005708000000026914,
+        "fullDetectionMs": 0.005708000000026914,
+        "simulatedCycleMs": 0.1119820000000118
+      }
+    },
+    {
+      "id": "multiple_questions-010",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "predictedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual é sua forma de colaborar com pessoas de outras áreas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004264999999918473,
+        "fullDetectionMs": 0.004264999999918473,
+        "simulatedCycleMs": 0.02809599999989132
+      }
+    },
+    {
+      "id": "multiple_questions-011",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você decide entre velocidade e manutenção?",
+      "predictedQuestion": "Como você decide entre velocidade e manutenção?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-011-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você decide entre velocidade e manutenção?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0043940000000475266,
+        "fullDetectionMs": 0.0043940000000475266,
+        "simulatedCycleMs": 0.05829300000004878
+      }
+    },
+    {
+      "id": "multiple_questions-012",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "predictedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você aprendeu ao trabalhar com sistemas legados?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004483000000050197,
+        "fullDetectionMs": 0.004483000000050197,
+        "simulatedCycleMs": 0.032902000000035514
+      }
+    },
+    {
+      "id": "multiple_questions-013",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você conduz uma conversa sobre divergências?",
+      "predictedQuestion": "Como você conduz uma conversa sobre divergências?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-013-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você conduz uma conversa sobre divergências?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005482000000029075,
+        "fullDetectionMs": 0.005482000000029075,
+        "simulatedCycleMs": 0.06077800000002753
+      }
+    },
+    {
+      "id": "multiple_questions-014",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "predictedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual foi uma decisão técnica que você reconsiderou?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004861000000005333,
+        "fullDetectionMs": 0.004861000000005333,
+        "simulatedCycleMs": 0.13620900000000802
+      }
+    },
+    {
+      "id": "multiple_questions-015",
+      "category": "multiple_questions",
+      "band": "direct",
+      "expectedQuestion": "Como você estrutura uma investigação de desempenho?",
+      "predictedQuestion": "Como você estrutura uma investigação de desempenho?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "multiple_questions-015-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você estrutura uma investigação de desempenho?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.017463999999904445,
+        "fullDetectionMs": 0.017463999999904445,
+        "simulatedCycleMs": 0.055025000000000546
+      }
+    },
+    {
+      "id": "candidate_after_question-001",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "predictedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-001-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você organiza prioridades em uma semana intensa?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0030040000000326472,
+        "fullDetectionMs": 0.0030040000000326472,
+        "simulatedCycleMs": 0.0337170000000242
+      }
+    },
+    {
+      "id": "candidate_after_question-002",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "predictedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-002-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual foi o principal aprendizado de um projeto difícil?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.006243000000040411,
+        "fullDetectionMs": 0.006243000000040411,
+        "simulatedCycleMs": 0.026540000000068176
+      }
+    },
+    {
+      "id": "candidate_after_question-003",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "predictedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-003-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você comunica um risco técnico para outras áreas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.003045000000042819,
+        "fullDetectionMs": 0.003045000000042819,
+        "simulatedCycleMs": 0.0317890000000034
+      }
+    },
+    {
+      "id": "candidate_after_question-004",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "O que você considera ao revisar uma solução?",
+      "predictedQuestion": "O que você considera ao revisar uma solução?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-004-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você considera ao revisar uma solução?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0024349999999913052,
+        "fullDetectionMs": 0.0024349999999913052,
+        "simulatedCycleMs": 0.015443000000004758
+      }
+    },
+    {
+      "id": "candidate_after_question-005",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Como você reage quando uma estimativa muda?",
+      "predictedQuestion": "Como você reage quando uma estimativa muda?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-005-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você reage quando uma estimativa muda?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005148000000076536,
+        "fullDetectionMs": 0.005148000000076536,
+        "simulatedCycleMs": 0.028910999999993692
+      }
+    },
+    {
+      "id": "candidate_after_question-006",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "predictedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual abordagem você usa para investigar uma falha?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0022519999999985885,
+        "fullDetectionMs": 0.0022519999999985885,
+        "simulatedCycleMs": 0.014967999999953463
+      }
+    },
+    {
+      "id": "candidate_after_question-007",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Como você garante clareza em decisões técnicas?",
+      "predictedQuestion": "Como você garante clareza em decisões técnicas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-007-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você garante clareza em decisões técnicas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.002410000000054424,
+        "fullDetectionMs": 0.002410000000054424,
+        "simulatedCycleMs": 0.02693299999998544
+      }
+    },
+    {
+      "id": "candidate_after_question-008",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "predictedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que faz quando recebe requisitos incompletos?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0043469999999388165,
+        "fullDetectionMs": 0.0043469999999388165,
+        "simulatedCycleMs": 0.016667999999981475
+      }
+    },
+    {
+      "id": "candidate_after_question-009",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "predictedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-009-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você acompanha a qualidade de uma entrega?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0023479999999835854,
+        "fullDetectionMs": 0.0023479999999835854,
+        "simulatedCycleMs": 0.024503999999978987
+      }
+    },
+    {
+      "id": "candidate_after_question-010",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "predictedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual é sua forma de colaborar com pessoas de outras áreas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004411000000004606,
+        "fullDetectionMs": 0.004411000000004606,
+        "simulatedCycleMs": 0.017006000000037602
+      }
+    },
+    {
+      "id": "candidate_after_question-011",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "predictedQuestion": "qual é sua estratégia para aprender um sistema existente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-011-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual é sua estratégia para aprender um sistema existente"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004857000000015432,
+        "fullDetectionMs": 0.004857000000015432,
+        "simulatedCycleMs": 0.027068000000099346
+      }
+    },
+    {
+      "id": "candidate_after_question-012",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "como você atua quando falta contexto",
+      "predictedQuestion": "como você atua quando falta contexto",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você atua quando falta contexto"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.09993099999996957,
+        "localOverheadMs": 0.24792600000000675,
+        "fullDetectionMs": 0.3478569999999763,
+        "simulatedCycleMs": 0.36149999999997817
+      }
+    },
+    {
+      "id": "candidate_after_question-013",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "me explique como você valida uma hipótese",
+      "predictedQuestion": "me explique como você valida uma hipótese",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-013-chunk-1",
+          "sequence": 1,
+          "excerpt": "me explique como você valida uma hipótese"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.00546400000007452,
+        "fullDetectionMs": 0.00546400000007452,
+        "simulatedCycleMs": 0.032583000000045104
+      }
+    },
+    {
+      "id": "candidate_after_question-014",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "o que você busca em uma parceria de trabalho",
+      "predictedQuestion": "o que você busca em uma parceria de trabalho",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você busca em uma parceria de trabalho"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07859400000006644,
+        "localOverheadMs": 0.22617899999988822,
+        "fullDetectionMs": 0.30477299999995466,
+        "simulatedCycleMs": 0.31826200000000426
+      }
+    },
+    {
+      "id": "candidate_after_question-015",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "como você acompanha uma entrega depois da publicação",
+      "predictedQuestion": "como você acompanha uma entrega depois da publicação",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-015-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você acompanha uma entrega depois da publicação"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005525000000034197,
+        "fullDetectionMs": 0.005525000000034197,
+        "simulatedCycleMs": 0.033019999999964966
+      }
+    },
+    {
+      "id": "candidate_after_question-016",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "como você lida com prioridades concorrentes",
+      "predictedQuestion": "como você lida com prioridades concorrentes",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-016-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você lida com prioridades concorrentes"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.08164200000010169,
+        "localOverheadMs": 0.25647399999979825,
+        "fullDetectionMs": 0.33811599999989994,
+        "simulatedCycleMs": 0.3513399999999365
+      }
+    },
+    {
+      "id": "candidate_after_question-017",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "me explique sua forma de investigar incidentes",
+      "predictedQuestion": "me explique sua forma de investigar incidentes",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.85,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-017-chunk-1",
+          "sequence": 1,
+          "excerpt": "me explique sua forma de investigar incidentes"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0030900000000428918,
+        "fullDetectionMs": 0.0030900000000428918,
+        "simulatedCycleMs": 0.032937000000060834
+      }
+    },
+    {
+      "id": "candidate_after_question-018",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "qual foi seu maior aprendizado recente",
+      "predictedQuestion": "qual foi seu maior aprendizado recente",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-018-chunk-1",
+          "sequence": 1,
+          "excerpt": "qual foi seu maior aprendizado recente"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0782130000000052,
+        "localOverheadMs": 0.25986199999999826,
+        "fullDetectionMs": 0.33807500000000346,
+        "simulatedCycleMs": 0.3523210000000745
+      }
+    },
+    {
+      "id": "candidate_after_question-019",
+      "category": "candidate_after_question",
+      "band": "direct",
+      "expectedQuestion": "como você comunica uma decisão impopular",
+      "predictedQuestion": "como você comunica uma decisão impopular",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-019-chunk-1",
+          "sequence": 1,
+          "excerpt": "como você comunica uma decisão impopular"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0033589999999321662,
+        "fullDetectionMs": 0.0033589999999321662,
+        "simulatedCycleMs": 0.032025999999973465
+      }
+    },
+    {
+      "id": "candidate_after_question-020",
+      "category": "candidate_after_question",
+      "band": "ambiguous",
+      "expectedQuestion": "o que você faz diante de um requisito ambíguo",
+      "predictedQuestion": "o que você faz diante de um requisito ambíguo",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "candidate_after_question-020-chunk-1",
+          "sequence": 1,
+          "excerpt": "o que você faz diante de um requisito ambíguo"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07334300000002258,
+        "localOverheadMs": 0.21256400000004305,
+        "fullDetectionMs": 0.28590700000006564,
+        "simulatedCycleMs": 0.29930799999999635
+      }
+    },
+    {
+      "id": "noise-001",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "predictedQuestion": "Como você organiza prioridades em uma semana intensa?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-001-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você organiza prioridades em uma semana intensa?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.003165999999964697,
+        "fullDetectionMs": 0.003165999999964697,
+        "simulatedCycleMs": 0.03049799999996594
+      }
+    },
+    {
+      "id": "noise-002",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "predictedQuestion": "Qual foi o principal aprendizado de um projeto difícil?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-002-chunk-2",
+          "sequence": 2,
+          "excerpt": "Qual foi o principal aprendizado de um projeto difícil?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0023949999999786087,
+        "fullDetectionMs": 0.0023949999999786087,
+        "simulatedCycleMs": 0.014768000000003667
+      }
+    },
+    {
+      "id": "noise-003",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "predictedQuestion": "Como você comunica um risco técnico para outras áreas?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-003-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você comunica um risco técnico para outras áreas?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.002307999999970889,
+        "fullDetectionMs": 0.002307999999970889,
+        "simulatedCycleMs": 0.022372000000018488
+      }
+    },
+    {
+      "id": "noise-004",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "O que você considera ao revisar uma solução?",
+      "predictedQuestion": "O que você considera ao revisar uma solução?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.92,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-004-chunk-2",
+          "sequence": 2,
+          "excerpt": "O que você considera ao revisar uma solução?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004224000000021988,
+        "fullDetectionMs": 0.004224000000021988,
+        "simulatedCycleMs": 0.015707000000020344
+      }
+    },
+    {
+      "id": "noise-005",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você reage quando uma estimativa muda?",
+      "predictedQuestion": "Como você reage quando uma estimativa muda?",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 1,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-005-chunk-2",
+          "sequence": 2,
+          "excerpt": "Como você reage quando uma estimativa muda?"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.002213000000097054,
+        "fullDetectionMs": 0.002213000000097054,
+        "simulatedCycleMs": 0.021388999999999214
+      }
+    },
+    {
+      "id": "noise-006",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "Qual abordagem você usa para investigar uma falha?",
+      "predictedQuestion": "Qual abordagem você usa para investigar uma falha",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-006-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual abordagem você usa para investigar uma falha"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07183000000009088,
+        "localOverheadMs": 0.21436399999993228,
+        "fullDetectionMs": 0.28619400000002315,
+        "simulatedCycleMs": 0.29820700000004763
+      }
+    },
+    {
+      "id": "noise-007",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você garante clareza em decisões técnicas?",
+      "predictedQuestion": "Como você garante clareza em decisões técnicas",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-007-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você garante clareza em decisões técnicas"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005859999999984211,
+        "fullDetectionMs": 0.005859999999984211,
+        "simulatedCycleMs": 0.044586999999978616
+      }
+    },
+    {
+      "id": "noise-008",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "O que faz quando recebe requisitos incompletos?",
+      "predictedQuestion": "O que faz quando recebe requisitos incompletos",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-008-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que faz quando recebe requisitos incompletos"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0680810000000065,
+        "localOverheadMs": 0.23128800000006322,
+        "fullDetectionMs": 0.2993690000000697,
+        "simulatedCycleMs": 0.31228200000009565
+      }
+    },
+    {
+      "id": "noise-009",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você acompanha a qualidade de uma entrega?",
+      "predictedQuestion": "Como você acompanha a qualidade de uma entrega",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-009-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você acompanha a qualidade de uma entrega"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.002874000000019805,
+        "fullDetectionMs": 0.002874000000019805,
+        "simulatedCycleMs": 0.028373999999985244
+      }
+    },
+    {
+      "id": "noise-010",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas?",
+      "predictedQuestion": "Qual é sua forma de colaborar com pessoas de outras áreas",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-010-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual é sua forma de colaborar com pessoas de outras áreas"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0866479999999683,
+        "localOverheadMs": 0.2868980000000647,
+        "fullDetectionMs": 0.373546000000033,
+        "simulatedCycleMs": 0.3865170000000262
+      }
+    },
+    {
+      "id": "noise-011",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você decide entre velocidade e manutenção?",
+      "predictedQuestion": "Como você decide entre velocidade e manutenção",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-011-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você decide entre velocidade e manutenção"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.005666000000019267,
+        "fullDetectionMs": 0.005666000000019267,
+        "simulatedCycleMs": 0.03560800000002473
+      }
+    },
+    {
+      "id": "noise-012",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "O que você aprendeu ao trabalhar com sistemas legados?",
+      "predictedQuestion": "O que você aprendeu ao trabalhar com sistemas legados",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-012-chunk-1",
+          "sequence": 1,
+          "excerpt": "O que você aprendeu ao trabalhar com sistemas legados"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.07087899999999081,
+        "localOverheadMs": 0.22714499999995041,
+        "fullDetectionMs": 0.2980239999999412,
+        "simulatedCycleMs": 0.3116929999999911
+      }
+    },
+    {
+      "id": "noise-013",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você conduz uma conversa sobre divergências?",
+      "predictedQuestion": "Como você conduz uma conversa sobre divergências",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-013-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você conduz uma conversa sobre divergências"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0029499999999416104,
+        "fullDetectionMs": 0.0029499999999416104,
+        "simulatedCycleMs": 0.031172999999967033
+      }
+    },
+    {
+      "id": "noise-014",
+      "category": "noise",
+      "band": "ambiguous",
+      "expectedQuestion": "Qual foi uma decisão técnica que você reconsiderou?",
+      "predictedQuestion": "Qual foi uma decisão técnica que você reconsiderou",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.9,
+      "source": "LLM",
+      "evidence": [
+        {
+          "chunkId": "noise-014-chunk-1",
+          "sequence": 1,
+          "excerpt": "Qual foi uma decisão técnica que você reconsiderou"
+        }
+      ],
+      "calls": 1,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0.0696020000000317,
+        "localOverheadMs": 0.21302300000002106,
+        "fullDetectionMs": 0.28262500000005275,
+        "simulatedCycleMs": 0.2956219999999803
+      }
+    },
+    {
+      "id": "noise-015",
+      "category": "noise",
+      "band": "direct",
+      "expectedQuestion": "Como você estrutura uma investigação de desempenho?",
+      "predictedQuestion": "Como você estrutura uma investigação de desempenho",
+      "status": "DETECTED",
+      "approved": true,
+      "confidence": 0.89,
+      "source": "DETERMINISTIC",
+      "evidence": [
+        {
+          "chunkId": "noise-015-chunk-1",
+          "sequence": 1,
+          "excerpt": "Como você estrutura uma investigação de desempenho"
+        }
+      ],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004992000000015651,
+        "fullDetectionMs": 0.004992000000015651,
+        "simulatedCycleMs": 0.03086200000007011
+      }
+    },
+    {
+      "id": "no_question-001",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.009873000000084176,
+        "fullDetectionMs": 0.009873000000084176,
+        "simulatedCycleMs": 0.028421000000093954
+      }
+    },
+    {
+      "id": "no_question-002",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004138000000011743,
+        "fullDetectionMs": 0.004138000000011743,
+        "simulatedCycleMs": 0.00966999999991458
+      }
+    },
+    {
+      "id": "no_question-003",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004442000000040025,
+        "fullDetectionMs": 0.004442000000040025,
+        "simulatedCycleMs": 0.02129000000002179
+      }
+    },
+    {
+      "id": "no_question-004",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0038989999999330394,
+        "fullDetectionMs": 0.0038989999999330394,
+        "simulatedCycleMs": 0.010841000000027634
+      }
+    },
+    {
+      "id": "no_question-005",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004050000000006548,
+        "fullDetectionMs": 0.004050000000006548,
+        "simulatedCycleMs": 0.020025000000032378
+      }
+    },
+    {
+      "id": "no_question-006",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0016830000000709333,
+        "fullDetectionMs": 0.0016830000000709333,
+        "simulatedCycleMs": 0.008925000000090222
+      }
+    },
+    {
+      "id": "no_question-007",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0020679999998947096,
+        "fullDetectionMs": 0.0020679999998947096,
+        "simulatedCycleMs": 0.01857099999995171
+      }
+    },
+    {
+      "id": "no_question-008",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0016719999999850188,
+        "fullDetectionMs": 0.0016719999999850188,
+        "simulatedCycleMs": 0.008742999999981294
+      }
+    },
+    {
+      "id": "no_question-009",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0020769999999856736,
+        "fullDetectionMs": 0.0020769999999856736,
+        "simulatedCycleMs": 0.0180400000000418
+      }
+    },
+    {
+      "id": "no_question-010",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0017249999999648935,
+        "fullDetectionMs": 0.0017249999999648935,
+        "simulatedCycleMs": 0.008436999999958061
+      }
+    },
+    {
+      "id": "no_question-011",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0020130000000335713,
+        "fullDetectionMs": 0.0020130000000335713,
+        "simulatedCycleMs": 0.01883300000008603
+      }
+    },
+    {
+      "id": "no_question-012",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.003622000000063963,
+        "fullDetectionMs": 0.003622000000063963,
+        "simulatedCycleMs": 0.008195000000000618
+      }
+    },
+    {
+      "id": "no_question-013",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0042600000000447835,
+        "fullDetectionMs": 0.0042600000000447835,
+        "simulatedCycleMs": 0.019889000000034684
+      }
+    },
+    {
+      "id": "no_question-014",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.0034740000000965665,
+        "fullDetectionMs": 0.0034740000000965665,
+        "simulatedCycleMs": 0.010162000000036642
+      }
+    },
+    {
+      "id": "no_question-015",
+      "category": "no_question",
+      "band": "notFound",
+      "expectedQuestion": null,
+      "predictedQuestion": null,
+      "status": "NOT_FOUND",
+      "approved": false,
+      "confidence": 0,
+      "source": "DETERMINISTIC",
+      "evidence": [],
+      "calls": 0,
+      "correct": true,
+      "regression": false,
+      "timings": {
+        "simulatedExternalMs": 0,
+        "localOverheadMs": 0.004182000000014341,
+        "fullDetectionMs": 0.004182000000014341,
+        "simulatedCycleMs": 0.020193000000062966
+      }
+    }
+  ]
+}

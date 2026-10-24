@@ -1,0 +1,221 @@
+[
+  {
+    "id": "without_punctuation-002",
+    "status": "DETECTED",
+    "question": "me explique sua forma de investigar incidentes",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-002-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-004",
+    "status": "DETECTED",
+    "question": "como você comunica uma decisão impopular",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-004-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-006",
+    "status": "DETECTED",
+    "question": "como você reduz riscos antes de uma entrega",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-006-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-008",
+    "status": "DETECTED",
+    "question": "como você organiza uma revisão técnica",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-008-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-010",
+    "status": "DETECTED",
+    "question": "como você reage a uma mudança urgente",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-010-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-012",
+    "status": "DETECTED",
+    "question": "como você identifica a causa de uma regressão",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-012-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-014",
+    "status": "DETECTED",
+    "question": "o que você faria diante de métricas contraditórias",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-014-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-016",
+    "status": "DETECTED",
+    "question": "qual é sua estratégia para aprender um sistema existente",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-016-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-018",
+    "status": "DETECTED",
+    "question": "me explique como você valida uma hipótese",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-018-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "without_punctuation-020",
+    "status": "DETECTED",
+    "question": "como você acompanha uma entrega depois da publicação",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "without_punctuation-020-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "implicit_question-002",
+    "status": "DETECTED",
+    "question": "Descreva uma decisão tomada com informações incompletas.",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "implicit_question-002-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "implicit_question-004",
+    "status": "DETECTED",
+    "question": "Dê um exemplo de colaboração entre áreas.",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "implicit_question-004-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "implicit_question-006",
+    "status": "DETECTED",
+    "question": "Mostre como você divide um problema complexo.",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "implicit_question-006-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "implicit_question-008",
+    "status": "DETECTED",
+    "question": "Descreva seu processo para priorizar débitos técnicos.",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "implicit_question-008-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "implicit_question-010",
+    "status": "DETECTED",
+    "question": "Dê um exemplo de melhoria contínua que você promoveu.",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "implicit_question-010-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "implicit_question-012",
+    "status": "DETECTED",
+    "question": "Conte como você conduz uma investigação sem evidência inicial.",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "implicit_question-012-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "implicit_question-014",
+    "status": "DETECTED",
+    "question": "Explique como você evita repetir uma falha.",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "implicit_question-014-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "candidate_after_question-012",
+    "status": "DETECTED",
+    "question": "como você atua quando falta contexto",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "candidate_after_question-012-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "candidate_after_question-014",
+    "status": "DETECTED",
+    "question": "o que você busca em uma parceria de trabalho",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "candidate_after_question-014-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "candidate_after_question-016",
+    "status": "DETECTED",
+    "question": "como você lida com prioridades concorrentes",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "candidate_after_question-016-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "candidate_after_question-018",
+    "status": "DETECTED",
+    "question": "qual foi seu maior aprendizado recente",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "candidate_after_question-018-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "candidate_after_question-020",
+    "status": "DETECTED",
+    "question": "o que você faz diante de um requisito ambíguo",
+    "confidence": 0.9,
+    "evidence": [
+      { "chunkId": "candidate_after_question-020-chunk-1", "sequence": 1 }
+    ]
+  },
+  {
+    "id": "noise-006",
+    "status": "DETECTED",
+    "question": "Qual abordagem você usa para investigar uma falha",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "noise-006-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "noise-008",
+    "status": "DETECTED",
+    "question": "O que faz quando recebe requisitos incompletos",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "noise-008-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "noise-010",
+    "status": "DETECTED",
+    "question": "Qual é sua forma de colaborar com pessoas de outras áreas",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "noise-010-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "noise-012",
+    "status": "DETECTED",
+    "question": "O que você aprendeu ao trabalhar com sistemas legados",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "noise-012-chunk-1", "sequence": 1 }]
+  },
+  {
+    "id": "noise-014",
+    "status": "DETECTED",
+    "question": "Qual foi uma decisão técnica que você reconsiderou",
+    "confidence": 0.9,
+    "evidence": [{ "chunkId": "noise-014-chunk-1", "sequence": 1 }]
+  }
+]
