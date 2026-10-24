@@ -236,6 +236,7 @@ async function runCase(item: CorpusCase, byId: Map<string, Fixture>) {
     confidence: result.confidence,
     source: result.source,
     evidence: result.evidence,
+    chunks: chunksFor(item),
     calls,
     correct: normalized(finalQuestion) === normalized(item.expectedQuestion),
     regression,
@@ -244,6 +245,31 @@ async function runCase(item: CorpusCase, byId: Map<string, Fixture>) {
 }
 
 type Evaluation = Awaited<ReturnType<typeof runCase>>;
+
+type TraceableEvaluation = {
+  expectedQuestion: string | null;
+  predictedQuestion: string | null;
+  calls: number;
+  correct: boolean;
+  regression: boolean;
+  evidence: Array<{ chunkId: string; sequence: number }>;
+  band?: Band;
+  chunks: Array<{ id: string; sequence: number; content: string }>;
+};
+
+type LatencyMetric = ReturnType<typeof latencySummary>;
+type QualityLatency = {
+  localOverheadMs: LatencyMetric;
+  simulatedCycleMs: LatencyMetric;
+  [key: string]: LatencyMetric;
+};
+
+type ReliabilityScenario = {
+  passed: boolean;
+  calls: number;
+  abortedAtMs?: number | null;
+  configuredTimeoutMs?: number;
+};
 
 function metrics(items: Evaluation[]) {
   const truePositive = items.filter(
@@ -283,6 +309,77 @@ function latencySummary(values: number[]) {
     p50Ms: sorted[Math.max(0, Math.ceil(sorted.length * 0.5) - 1)] ?? 0,
     p95Ms: sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)] ?? 0,
     maxMs: sorted.at(-1) ?? 0,
+  };
+}
+
+export function buildQualitySummary(
+  evaluations: TraceableEvaluation[],
+  latency: QualityLatency,
+  timeouts: ReliabilityScenario[],
+  failures: ReliabilityScenario[],
+) {
+  const overall = metrics(evaluations as Evaluation[]);
+  const hasBandData = evaluations.some((item) => item.band !== undefined);
+  const byBand = Object.fromEntries(
+    (['direct', 'ambiguous', 'notFound'] as const).map((band) => [
+      band,
+      metrics(evaluations.filter((item) => item.band === band) as Evaluation[]),
+    ]),
+  );
+  const llmCallRate =
+    evaluations.filter((item) => item.calls > 0).length /
+    Math.max(1, evaluations.length);
+  const noInventedQuestion = evaluations.every((item) => {
+    if (item.predictedQuestion === null) return true;
+    return item.evidence.some((evidence) =>
+      reconstructTraceableEvidence(
+        item.predictedQuestion!,
+        item.chunks,
+        evidence,
+      ),
+    );
+  });
+  const gates = {
+    accuracy: overall.normalizedAccuracy >= 0.9,
+    normalizedAccuracy: overall.normalizedAccuracy >= 0.9,
+    f1: overall.f1 >= 0.9,
+    trueNegatives: overall.trueNegative > 0,
+    noInventedQuestion,
+    additionalDetectionP95: latency.localOverheadMs.p95Ms <= 50,
+    directBaseline:
+      !hasBandData ||
+      (byBand.direct.total === 78 && byBand.direct.regressions === 0),
+    notFoundBaseline:
+      !hasBandData ||
+      (byBand.notFound.total === 15 && byBand.notFound.regressions === 0),
+    ambiguousIds: !hasBandData || byBand.ambiguous.total === 27,
+    escalationRate: !hasBandData || llmCallRate === 0.225,
+    singleCall: evaluations.every(
+      (item) =>
+        item.calls ===
+          (item.band === undefined || item.band === 'ambiguous' ? 1 : 0) ||
+        (item.band === undefined && item.calls === 0),
+    ),
+    localOverhead: latency.localOverheadMs.p95Ms <= 50,
+    timeoutBoundaryAndNoRetry: timeouts.every(
+      (item) =>
+        item.passed &&
+        item.calls === 1 &&
+        (item.configuredTimeoutMs === undefined ||
+          item.abortedAtMs === item.configuredTimeoutMs),
+    ),
+    failureConfirmationAndNoRetry: failures.every(
+      (item) => item.passed && item.calls === 1,
+    ),
+  };
+  return {
+    metrics: { ...overall, llmCallRate, escalationRate: llmCallRate },
+    latency: {
+      additionalDetectionP95Ms: latency.localOverheadMs.p95Ms,
+      simulatedTotalCycleP95Ms: latency.simulatedCycleMs.p95Ms,
+    },
+    gates,
+    passed: Object.values(gates).every(Boolean),
   };
 }
 
@@ -453,31 +550,8 @@ async function main() {
       key,
       latencySummary(measurements.map((item) => item[key])),
     ]),
-  );
-  const escalationRate = overall.escalations / corpus.length;
-  const gates = {
-    normalizedAccuracy: overall.normalizedAccuracy >= 0.9,
-    f1: overall.f1 >= 0.9,
-    directBaseline:
-      byBand.direct.total === 78 && byBand.direct.regressions === 0,
-    notFoundBaseline:
-      byBand.notFound.total === 15 && byBand.notFound.regressions === 0,
-    ambiguousIds: byBand.ambiguous.total === 27 && fixtures.length === 27,
-    escalationRate: escalationRate === 0.225,
-    singleCall: evaluations.every(
-      (item) => item.calls === (item.band === 'ambiguous' ? 1 : 0),
-    ),
-    localOverhead: latency.localOverheadMs.p95Ms <= 50,
-    timeoutBoundaryAndNoRetry: timeouts.every(
-      (item) =>
-        item.passed &&
-        item.calls === 1 &&
-        item.abortedAtMs === item.configuredTimeoutMs,
-    ),
-    failureConfirmationAndNoRetry: failures.every(
-      (item) => item.passed && item.calls === 1,
-    ),
-  };
+  ) as QualityLatency;
+  const summary = buildQualitySummary(evaluations, latency, timeouts, failures);
   const report = {
     detectorVersion: 'hybrid-v1',
     provider: 'gemini',
@@ -494,7 +568,7 @@ async function main() {
       'Offline reviewed fixtures through the production Gemini adapter and hybrid orchestrator; validates contracts and routing, not remote model quality or persistence.',
     corpusSize: corpus.length,
     fixtureCount: fixtures.length,
-    metrics: { ...overall, escalationRate },
+    metrics: summary.metrics,
     byBand,
     byCategory,
     benchmark: {
@@ -534,21 +608,24 @@ async function main() {
       timeoutAbortRate:
         timeouts.filter((item) => item.passed).length / timeouts.length,
     },
-    gates,
-    passed: Object.values(gates).every(Boolean),
-    ambiguousResults: evaluations.filter((item) => item.band === 'ambiguous'),
-    results: evaluations,
+    latency: summary.latency,
+    gates: summary.gates,
+    passed: summary.passed,
+    ambiguousResults: evaluations
+      .filter((item) => item.band === 'ambiguous')
+      .map(({ chunks: _chunks, ...item }) => item),
+    results: evaluations.map(({ chunks: _chunks, ...item }) => item),
   };
   mkdirSync(resolve('generated'), { recursive: true });
-  const outputPath = resolve('generated/feat-018-hybrid-v1.json');
+  const outputPath = resolve('generated/feat-020-quality-gate.json');
   writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
   console.log(
     JSON.stringify(
       {
         outputPath,
         metrics: report.metrics,
-        latency,
-        gates,
+        latency: report.latency,
+        gates: report.gates,
         passed: report.passed,
       },
       null,
@@ -561,13 +638,15 @@ async function main() {
   );
 }
 
-main()
-  .catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(() => {
-    globalThis.fetch = originalFetch;
-    globalThis.setTimeout = originalSetTimeout;
-    globalThis.clearTimeout = originalClearTimeout;
-  });
+if (require.main === module) {
+  main()
+    .catch((error: unknown) => {
+      console.error(error);
+      process.exitCode = 1;
+    })
+    .finally(() => {
+      globalThis.fetch = originalFetch;
+      globalThis.setTimeout = originalSetTimeout;
+      globalThis.clearTimeout = originalClearTimeout;
+    });
+}
