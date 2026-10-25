@@ -1,0 +1,36 @@
+{
+  "state": "completed",
+  "startedAt": "2026-10-25T13:32:32.877Z",
+  "completedAt": "2026-10-25T13:33:11.375Z",
+  "steps": [
+    {
+      "name": "hybrid-corpus",
+      "outcome": "exit",
+      "exitCode": 0,
+      "startedAt": "2026-10-25T13:32:32.877Z",
+      "completedAt": "2026-10-25T13:32:34.664Z"
+    },
+    {
+      "name": "backend-detection",
+      "outcome": "exit",
+      "exitCode": 0,
+      "startedAt": "2026-10-25T13:32:34.664Z",
+      "completedAt": "2026-10-25T13:32:38.871Z"
+    },
+    {
+      "name": "backend-contracts",
+      "outcome": "exit",
+      "exitCode": 0,
+      "startedAt": "2026-10-25T13:32:38.871Z",
+      "completedAt": "2026-10-25T13:32:55.216Z"
+    },
+    {
+      "name": "frontend-contracts",
+      "outcome": "exit",
+      "exitCode": 0,
+      "startedAt": "2026-10-25T13:32:55.216Z",
+      "completedAt": "2026-10-25T13:33:11.375Z"
+    }
+  ],
+  "passed": true
+}

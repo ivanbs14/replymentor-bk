@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-10-25T13:17:48.543Z",
+  "provider": "gemini",
+  "model": "gemini-2.0-flash",
+  "sampleSize": 8,
+  "loadProfile": "serial, concurrency=1, no retry",
+  "successes": 0,
+  "failures": 8,
+  "outcomes": {
+    "http_error": 8
+  },
+  "latency": {
+    "p50Ms": 0,
+    "p95Ms": 0,
+    "maxMs": 0
+  },
+  "targetP95Ms": 1500,
+  "targetMet": false,
+  "blocking": false
+}
