@@ -2,13 +2,14 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import {
   Prisma,
   QuestionDetectionSource,
   QuestionDetectionStatus,
+  SessionSummaryStatus,
   SessionStatus,
 } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
@@ -29,6 +30,9 @@ import type {
 } from './question-detection.types';
 import { detectLatestQuestion } from './question-detection/deterministic-question-detector';
 import { HybridQuestionDetector } from './question-detection/hybrid-question-detector';
+import { buildDeterministicSummary } from './session-summary';
+import { SESSION_SUMMARY_PROMPT_VERSION } from './session-summary.types';
+import { OperationalLogger } from '../observability/operational-logger';
 
 type LockedSession = {
   id: string;
@@ -38,7 +42,6 @@ type LockedSession = {
 
 @Injectable()
 export class InterviewService {
-  private readonly logger = new Logger(InterviewService.name);
   private readonly maxChunksForGeneration = 8;
   private readonly generationTransactionTimeoutMs =
     Math.max(Number(process.env.LLM_TIMEOUT_MS ?? '45000') || 45_000, 5_000) +
@@ -50,6 +53,7 @@ export class InterviewService {
     private readonly prisma: PrismaService,
     private readonly ai: AiService,
     private readonly hybridQuestionDetector: HybridQuestionDetector,
+    @Optional() private readonly logger = new OperationalLogger(),
   ) {}
 
   async createContext(userId: string, payload: CreateInterviewContextDto) {
@@ -230,8 +234,9 @@ export class InterviewService {
           : 'needs_confirmation';
       return result;
     } finally {
-      this.logger.log({
-        operation: 'generate_response',
+      this.logger.info({
+        event: 'generate_response',
+        sessionId,
         outcome,
         durationMs: performance.now() - startedAt,
       });
@@ -514,28 +519,28 @@ export class InterviewService {
           if (!existing) {
             throw new NotFoundException('Resumo da sessão não encontrado.');
           }
-          return existing;
+          return this.toSessionSummary(existing);
         }
 
         const responses = await tx.suggestedResponse.findMany({
           where: { sessionId },
           orderBy: { createdAt: 'asc' },
         });
-        const content =
-          responses.length === 0
-            ? 'Sessão encerrada sem respostas sugeridas registradas.'
-            : `Sessão encerrada com ${responses.length} respostas sugeridas.`;
-        const topics = responses
-          .map((response) => response.detectedQuestion)
-          .slice(-10);
+        const fallbackContent = buildDeterministicSummary(responses);
 
         await tx.interviewSession.update({
           where: { id: sessionId },
           data: { status: SessionStatus.CLOSED, endedAt: new Date() },
         });
-        return tx.sessionSummary.create({
-          data: { sessionId, content, topics },
+        const summary = await tx.sessionSummary.create({
+          data: {
+            sessionId,
+            status: SessionSummaryStatus.PENDING,
+            fallbackContent,
+            promptVersion: SESSION_SUMMARY_PROMPT_VERSION,
+          },
         });
+        return this.toSessionSummary(summary);
       },
       { timeout: this.sessionTransactionTimeoutMs },
     );
@@ -556,7 +561,97 @@ export class InterviewService {
     if (!summary) {
       throw new NotFoundException('Resumo da sessão não encontrado.');
     }
-    return summary;
+    return this.toSessionSummary(summary);
+  }
+
+  async retrySummary(userId: string, sessionId: string) {
+    const session = await this.prisma.interviewSession.findUnique({
+      where: { id: sessionId },
+      include: { context: true },
+    });
+    if (!session || session.context.userId !== userId) {
+      throw new NotFoundException('Resumo da sessão não encontrado.');
+    }
+    const summary = await this.prisma.sessionSummary.findUnique({
+      where: { sessionId },
+    });
+    if (!summary)
+      throw new NotFoundException('Resumo da sessão não encontrado.');
+    if (
+      summary.status !== SessionSummaryStatus.FAILED ||
+      summary.manualRetryUsed
+    ) {
+      throw new ConflictException({
+        code: 'SUMMARY_RETRY_NOT_AVAILABLE',
+        message: 'A nova tentativa do resumo não está disponível.',
+      });
+    }
+    try {
+      const updated = await this.prisma.sessionSummary.update({
+        where: {
+          id: summary.id,
+          status: SessionSummaryStatus.FAILED,
+          manualRetryUsed: false,
+        },
+        data: {
+          status: SessionSummaryStatus.PENDING,
+          manualRetryUsed: true,
+          content: Prisma.JsonNull,
+          provider: null,
+          model: null,
+          startedAt: null,
+          claimedAt: null,
+          providerCallStartedAt: null,
+          completedAt: null,
+          errorCode: null,
+          evidenceResponseIds: [],
+        },
+      });
+      return this.toSessionSummary(updated);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new ConflictException({
+          code: 'SUMMARY_RETRY_NOT_AVAILABLE',
+          message: 'A nova tentativa do resumo não está disponível.',
+        });
+      }
+      throw error;
+    }
+  }
+
+  private toSessionSummary(summary: {
+    id: string;
+    sessionId: string;
+    status: SessionSummaryStatus;
+    content: Prisma.JsonValue | null;
+    fallbackContent: string;
+    provider: string | null;
+    model: string | null;
+    promptVersion: string;
+    startedAt: Date | null;
+    completedAt: Date | null;
+    errorCode: string | null;
+  }) {
+    return {
+      id: summary.id,
+      sessionId: summary.sessionId,
+      status:
+        summary.status === SessionSummaryStatus.PROCESSING
+          ? SessionSummaryStatus.PENDING
+          : summary.status,
+      content:
+        summary.status === SessionSummaryStatus.READY ? summary.content : null,
+      fallbackContent: summary.fallbackContent,
+      provider: summary.provider,
+      model: summary.model,
+      promptVersion: summary.promptVersion,
+      startedAt: summary.startedAt,
+      completedAt: summary.completedAt,
+      errorCode: summary.errorCode,
+    };
   }
 
   private async lockOwnedSession(

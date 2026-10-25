@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
+  Optional,
   PayloadTooLargeException,
 } from '@nestjs/common';
 import {
@@ -15,6 +15,11 @@ import type {
   LlmProvider,
   SuggestedAnswerPayload,
 } from '../interview/interview.types';
+import type {
+  SessionSummaryContext,
+  SessionSummaryTarget,
+} from '../interview/session-summary.types';
+import { OperationalLogger } from '../observability/operational-logger';
 
 type GenerateInput = {
   context: CreateInterviewContextDto;
@@ -46,7 +51,7 @@ type OpenAiCompatibleResponse = {
 
 @Injectable()
 export class AiService {
-  private readonly logger = new Logger(AiService.name);
+  constructor(@Optional() private readonly logger = new OperationalLogger()) {}
 
   private readonly defaultProvider =
     (process.env.LLM_PROVIDER as LlmProvider | undefined) ?? 'gemini';
@@ -91,6 +96,7 @@ export class AiService {
     mimeType?: string;
   }): Promise<string> {
     if (input.transcript && input.transcript.trim().length > 0) {
+      this.logger.info({ event: 'stt', outcome: 'manual', durationMs: 0 });
       return input.transcript.trim();
     }
 
@@ -132,21 +138,31 @@ export class AiService {
         error instanceof Error &&
         ['TimeoutError', 'AbortError'].includes(error.name)
       ) {
-        this.logger.warn(
-          `provider=stt outcome=timeout durationMs=${durationMs}`,
-        );
+        this.logger.warn({
+          event: 'stt',
+          provider: 'whisper',
+          outcome: 'timeout',
+          durationMs,
+        });
         throw new ProviderTimeoutException();
       }
-      this.logger.warn(
-        `provider=stt outcome=network_error durationMs=${durationMs}`,
-      );
+      this.logger.warn({
+        event: 'stt',
+        provider: 'whisper',
+        outcome: 'network_error',
+        durationMs,
+      });
       throw new ProviderUnavailableException();
     }
 
     if (!response.ok) {
-      this.logger.warn(
-        `provider=stt outcome=http_error status=${response.status} durationMs=${Date.now() - startedAt}`,
-      );
+      this.logger.warn({
+        event: 'stt',
+        provider: 'whisper',
+        outcome: 'http_error',
+        statusCode: response.status,
+        durationMs: Date.now() - startedAt,
+      });
       throw new ProviderBadGatewayException();
     }
 
@@ -154,9 +170,12 @@ export class AiService {
     try {
       data = await response.json();
     } catch {
-      this.logger.warn(
-        `provider=stt outcome=invalid_json durationMs=${Date.now() - startedAt}`,
-      );
+      this.logger.warn({
+        event: 'stt',
+        provider: 'whisper',
+        outcome: 'invalid_json',
+        durationMs: Date.now() - startedAt,
+      });
       throw new ProviderBadGatewayException();
     }
     const text =
@@ -166,12 +185,22 @@ export class AiService {
         ? (Reflect.get(data, 'text') as string).trim()
         : '';
     if (!text || text.length > MAX_TRANSCRIPT_CHARS) {
-      this.logger.warn(
-        `provider=stt outcome=invalid_response durationMs=${Date.now() - startedAt}`,
-      );
+      this.logger.warn({
+        event: 'stt',
+        provider: 'whisper',
+        outcome: 'invalid_response',
+        durationMs: Date.now() - startedAt,
+      });
       throw new ProviderBadGatewayException();
     }
 
+    this.logger.info({
+      event: 'stt',
+      provider: 'whisper',
+      model: this.whisperModel,
+      outcome: 'success',
+      durationMs: Date.now() - startedAt,
+    });
     return text;
   }
 
@@ -183,23 +212,81 @@ export class AiService {
       input.model,
     );
     const prompt = this.buildPrompt(input);
+    const started = performance.now();
+    let outcome = 'error';
+    try {
+      let outputText: string;
+      if (provider === 'gemini') {
+        outputText = await this.generateWithGemini(model, prompt);
+      } else if (provider === 'openai') {
+        outputText = await this.generateWithOpenAi(model, prompt);
+      } else {
+        outputText = await this.generateWithOllama(model, prompt);
+      }
 
-    let outputText: string;
-    if (provider === 'gemini') {
-      outputText = await this.generateWithGemini(model, prompt);
-    } else if (provider === 'openai') {
-      outputText = await this.generateWithOpenAi(model, prompt);
-    } else {
-      outputText = await this.generateWithOllama(model, prompt);
+      const parsed = this.parseSuggestedAnswer(outputText);
+      if (!parsed) {
+        outcome = 'invalid_contract';
+        throw new ProviderBadGatewayException();
+      }
+      outcome = 'success';
+      return parsed;
+    } finally {
+      this.logger.emit(outcome === 'success' ? 'info' : 'error', {
+        event: 'llm_generation',
+        provider,
+        model,
+        outcome,
+        durationMs: performance.now() - started,
+      });
     }
+  }
 
-    const parsed = this.parseSuggestedAnswer(outputText);
-    if (!parsed) {
-      this.logger.error(`provider=${provider} outcome=invalid_contract`);
-      throw new ProviderBadGatewayException();
+  async generateSessionSummary(input: {
+    context: SessionSummaryContext;
+    target: SessionSummaryTarget;
+  }): Promise<string> {
+    const prompt = this.buildSessionSummaryPrompt(input.context);
+    const timeoutMs = 15_000;
+    if (input.target.provider === 'gemini') {
+      return this.generateWithGemini(
+        input.target.model,
+        prompt,
+        timeoutMs,
+        1_600,
+      );
     }
-
-    return parsed;
+    const providerLabel =
+      input.target.provider === 'openai' ? 'OpenAI' : 'Ollama';
+    const baseUrl =
+      input.target.provider === 'openai'
+        ? this.openAiBaseUrl
+        : this.ollamaBaseUrl;
+    const apiKey =
+      input.target.provider === 'openai'
+        ? this.openAiApiKey
+        : this.ollamaApiKey;
+    if (input.target.provider === 'openai' && !apiKey) {
+      this.logger.error({
+        event: 'llm_provider',
+        provider: input.target.provider,
+        model: input.target.model,
+        outcome: 'config_error',
+        durationMs: 0,
+      });
+      throw new ProviderUnavailableException();
+    }
+    return this.generateWithOpenAiCompatible({
+      providerLabel,
+      baseUrl,
+      model: input.target.model,
+      prompt,
+      apiKey,
+      timeoutMs,
+      maxTokens: 1_600,
+      systemPrompt:
+        'Você produz somente JSON válido e descritivo, sem nota, ranking ou recomendação de contratação.',
+    });
   }
 
   resolveGenerationTarget(provider?: LlmProvider, model?: string) {
@@ -213,9 +300,18 @@ export class AiService {
   private async generateWithGemini(
     model: string,
     prompt: string,
+    timeoutMs = this.llmTimeoutMs,
+    maxOutputTokens = 500,
   ): Promise<string> {
+    const started = performance.now();
     if (!this.geminiApiKey) {
-      this.logger.error('GEMINI_API_KEY não configurada.');
+      this.logger.error({
+        event: 'llm_provider',
+        provider: 'gemini',
+        model,
+        outcome: 'config_error',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderUnavailableException();
     }
 
@@ -224,7 +320,7 @@ export class AiService {
       `?key=${encodeURIComponent(this.geminiApiKey)}`;
 
     let response: Response;
-    const signal = AbortSignal.timeout(this.llmTimeoutMs);
+    const signal = AbortSignal.timeout(timeoutMs);
     try {
       response = await fetch(endpoint, {
         method: 'POST',
@@ -240,23 +336,40 @@ export class AiService {
           generationConfig: {
             temperature: 0.3,
             responseMimeType: 'application/json',
-            maxOutputTokens: 500,
+            maxOutputTokens,
           },
         }),
       });
     } catch (error) {
       if (error instanceof Error && error.name === 'TimeoutError') {
-        this.logger.error(`Timeout ao chamar Gemini (${this.llmTimeoutMs}ms).`);
+        this.logger.error({
+          event: 'llm_provider',
+          provider: 'gemini',
+          model,
+          outcome: 'timeout',
+          durationMs: performance.now() - started,
+        });
         throw new ProviderTimeoutException();
       }
-      this.logger.error('provider=gemini outcome=network_error');
+      this.logger.error({
+        event: 'llm_provider',
+        provider: 'gemini',
+        model,
+        outcome: 'network_error',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderUnavailableException();
     }
 
     if (!response.ok) {
-      this.logger.error(
-        `provider=gemini outcome=http_error status=${response.status}`,
-      );
+      this.logger.error({
+        event: 'llm_provider',
+        provider: 'gemini',
+        model,
+        outcome: 'http_error',
+        statusCode: response.status,
+        durationMs: performance.now() - started,
+      });
       throw new ProviderBadGatewayException();
     }
 
@@ -264,15 +377,34 @@ export class AiService {
     try {
       data = (await response.json()) as GeminiResponse;
     } catch {
-      this.logger.error('provider=gemini outcome=invalid_json');
+      this.logger.error({
+        event: 'llm_provider',
+        provider: 'gemini',
+        model,
+        outcome: 'invalid_json',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderBadGatewayException();
     }
     const outputText = this.extractGeminiText(data);
     if (!outputText) {
-      this.logger.error('Gemini retornou conteúdo vazio.');
+      this.logger.error({
+        event: 'llm_provider',
+        provider: 'gemini',
+        model,
+        outcome: 'empty_response',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderBadGatewayException();
     }
 
+    this.logger.info({
+      event: 'llm_provider',
+      provider: 'gemini',
+      model,
+      outcome: 'success',
+      durationMs: performance.now() - started,
+    });
     return outputText;
   }
 
@@ -280,8 +412,15 @@ export class AiService {
     model: string,
     prompt: string,
   ): Promise<string> {
+    const started = performance.now();
     if (!this.openAiApiKey) {
-      this.logger.error('OPENAI_API_KEY não configurada.');
+      this.logger.error({
+        event: 'llm_provider',
+        provider: 'openai',
+        model,
+        outcome: 'config_error',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderUnavailableException();
     }
 
@@ -313,11 +452,16 @@ export class AiService {
     model: string;
     prompt: string;
     apiKey?: string;
+    timeoutMs?: number;
+    maxTokens?: number;
+    systemPrompt?: string;
   }): Promise<string> {
+    const started = performance.now();
     const endpoint = `${input.baseUrl.replace(/\/$/, '')}/chat/completions`;
 
     let response: Response;
-    const signal = AbortSignal.timeout(this.llmTimeoutMs);
+    const timeoutMs = input.timeoutMs ?? this.llmTimeoutMs;
+    const signal = AbortSignal.timeout(timeoutMs);
     try {
       response = await fetch(endpoint, {
         method: 'POST',
@@ -332,33 +476,47 @@ export class AiService {
             {
               role: 'system',
               content:
+                input.systemPrompt ??
                 'Você responde apenas em JSON válido com as chaves: detectedQuestion, suggestedAnswer, shortVersion, keyPoints, strategicNote.',
             },
             { role: 'user', content: input.prompt },
           ],
           temperature: 0.3,
           response_format: { type: 'json_object' },
-          max_tokens: 550,
+          max_tokens: input.maxTokens ?? 550,
           stream: false,
         }),
       });
     } catch (error) {
       if (error instanceof Error && error.name === 'TimeoutError') {
-        this.logger.error(
-          `Timeout ao chamar ${input.providerLabel} (${this.llmTimeoutMs}ms).`,
-        );
+        this.logger.error({
+          event: 'llm_provider',
+          provider: input.providerLabel.toLowerCase(),
+          model: input.model,
+          outcome: 'timeout',
+          durationMs: performance.now() - started,
+        });
         throw new ProviderTimeoutException();
       }
-      this.logger.error(
-        `provider=${input.providerLabel.toLowerCase()} outcome=network_error`,
-      );
+      this.logger.error({
+        event: 'llm_provider',
+        provider: input.providerLabel.toLowerCase(),
+        model: input.model,
+        outcome: 'network_error',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderUnavailableException();
     }
 
     if (!response.ok) {
-      this.logger.error(
-        `provider=${input.providerLabel.toLowerCase()} outcome=http_error status=${response.status}`,
-      );
+      this.logger.error({
+        event: 'llm_provider',
+        provider: input.providerLabel.toLowerCase(),
+        model: input.model,
+        outcome: 'http_error',
+        statusCode: response.status,
+        durationMs: performance.now() - started,
+      });
       throw new ProviderBadGatewayException();
     }
 
@@ -366,17 +524,34 @@ export class AiService {
     try {
       data = (await response.json()) as OpenAiCompatibleResponse;
     } catch {
-      this.logger.error(
-        `provider=${input.providerLabel.toLowerCase()} outcome=invalid_json`,
-      );
+      this.logger.error({
+        event: 'llm_provider',
+        provider: input.providerLabel.toLowerCase(),
+        model: input.model,
+        outcome: 'invalid_json',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderBadGatewayException();
     }
     const outputText = data.choices?.[0]?.message?.content?.trim();
     if (!outputText) {
-      this.logger.error(`${input.providerLabel} retornou conteúdo vazio.`);
+      this.logger.error({
+        event: 'llm_provider',
+        provider: input.providerLabel.toLowerCase(),
+        model: input.model,
+        outcome: 'empty_response',
+        durationMs: performance.now() - started,
+      });
       throw new ProviderBadGatewayException();
     }
 
+    this.logger.info({
+      event: 'llm_provider',
+      provider: input.providerLabel.toLowerCase(),
+      model: input.model,
+      outcome: 'success',
+      durationMs: performance.now() - started,
+    });
     return outputText;
   }
 
@@ -447,6 +622,22 @@ export class AiService {
       `Descrição da vaga (resumo): ${compactContext.jobDescription}`,
       `Pergunta identificada: ${compactQuestion}`,
       `Trecho recente da conversa: ${compactTranscript}`,
+    ].join('\n');
+  }
+
+  private buildSessionSummaryPrompt(context: SessionSummaryContext): string {
+    return [
+      'Gere um resumo fiel desta sessão de entrevista em português brasileiro.',
+      'Use somente os dados fornecidos. Não atribua competências ou fatos não evidenciados.',
+      'Não dê nota, ranking nem recomendação de contratação.',
+      'Pontos fortes e melhorias devem conter evidenceResponseId exatamente igual ao id de uma resposta fornecida.',
+      'Retorne JSON com estas chaves exatas:',
+      'overview, questions, topics, strengths, improvements, nextSteps.',
+      'questions: [{"question":"...","answerSummary":"..."}]',
+      'strengths e improvements: [{"text":"...","evidenceResponseId":"..."}]',
+      'Blocos sem evidência devem ser arrays vazios. Não use markdown ou comentários.',
+      '',
+      JSON.stringify(context),
     ].join('\n');
   }
 

@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { Logger, Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,43 +16,62 @@ import { OriginGuard } from './auth/origin.guard';
 import { QuestionDetectionConfig } from './interview/question-detection/question-detection.config';
 import { GeminiQuestionDetector } from './interview/question-detection/gemini-question-detector';
 import { HybridQuestionDetector } from './interview/question-detection/hybrid-question-detector';
+import { SessionSummaryProcessor } from './interview/session-summary.processor';
+import { HealthController } from './health/health.controller';
+import { OperationalLogger } from './observability/operational-logger';
+import { RequestContextMiddleware } from './observability/request-context.middleware';
+import { HttpObservabilityInterceptor } from './observability/http-observability.interceptor';
 
 @Module({
   imports: [JwtModule.register({})],
-  controllers: [AppController, InterviewController, AuthController],
+  controllers: [
+    AppController,
+    InterviewController,
+    AuthController,
+    HealthController,
+  ],
   providers: [
     AppService,
     PrismaService,
     AiService,
     QuestionDetectionConfig,
     GeminiQuestionDetector,
+    OperationalLogger,
+    RequestContextMiddleware,
     {
       provide: HybridQuestionDetector,
       useFactory: (
         detector: GeminiQuestionDetector,
         config: QuestionDetectionConfig,
+        logger: OperationalLogger,
       ) => {
-        const logger = new Logger(HybridQuestionDetector.name);
         return new HybridQuestionDetector(
           detector,
           config,
           (outcome) =>
-            logger.log({
+            logger.info({
+              event: 'question_detection_provider',
               provider: 'gemini',
               model: config.model,
               outcome,
             }),
           (outcome, durationMs) =>
-            logger.log({
+            logger.info({
+              event: 'question_detection',
               detectorVersion: 'hybrid-v1',
               outcome,
               durationMs,
             }),
         );
       },
-      inject: [GeminiQuestionDetector, QuestionDetectionConfig],
+      inject: [
+        GeminiQuestionDetector,
+        QuestionDetectionConfig,
+        OperationalLogger,
+      ],
     },
     InterviewService,
+    SessionSummaryProcessor,
     AuthService,
     AuthConfigService,
     {
@@ -63,6 +82,14 @@ import { HybridQuestionDetector } from './interview/question-detection/hybrid-qu
       provide: APP_GUARD,
       useClass: OriginGuard,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpObservabilityInterceptor,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestContextMiddleware).forRoutes('*');
+  }
+}

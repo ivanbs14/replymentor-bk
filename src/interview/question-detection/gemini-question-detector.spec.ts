@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { OperationalLogger } from '../../observability/operational-logger';
 import { GeminiQuestionDetector } from './gemini-question-detector';
 import { QuestionDetectionConfig } from './question-detection.config';
 import {
@@ -59,6 +59,7 @@ describe('GeminiQuestionDetector', () => {
     const logData = logCalls[0][0] as Record<string, unknown>;
     expect(Object.keys(logData).sort()).toEqual([
       'durationMs',
+      'event',
       'model',
       'outcome',
       'provider',
@@ -78,7 +79,9 @@ describe('GeminiQuestionDetector', () => {
       QUESTION_DETECTION_TIMEOUT_MS: '1500',
     };
     global.fetch = jest.fn().mockResolvedValue(response(detected));
-    logger = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    logger = jest
+      .spyOn(OperationalLogger.prototype, 'info')
+      .mockImplementation(() => {});
   });
 
   afterEach(() => {

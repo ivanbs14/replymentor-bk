@@ -36,8 +36,22 @@ describe('AppController (e2e)', () => {
   const summary = {
     id: 'summary-a',
     sessionId,
-    content: 'Resumo privado A.',
-    topics: [],
+    status: 'READY',
+    content: {
+      overview: 'Resumo privado A.',
+      questions: [],
+      topics: [],
+      strengths: [],
+      improvements: [],
+      nextSteps: [],
+    },
+    fallbackContent: 'Resumo básico privado A.',
+    provider: 'gemini',
+    model: 'gemini-2.0-flash',
+    promptVersion: 'session-summary-v1',
+    startedAt: null,
+    completedAt: null,
+    errorCode: null,
   };
   let prisma: ReturnType<typeof createPrismaMock>;
   const ai = {
@@ -121,6 +135,7 @@ describe('AppController (e2e)', () => {
         create: jest.fn().mockResolvedValue(ownedSession),
       },
       sessionSummary: { findUnique: jest.fn().mockResolvedValue(summary) },
+      $queryRaw: jest.fn().mockResolvedValue([{ one: 1 }]),
       $transaction: jest.fn((callback: (client: typeof tx) => unknown) =>
         callback(tx),
       ),
@@ -145,6 +160,7 @@ describe('AppController (e2e)', () => {
     process.env.JWT_ISSUER = 'replymentor-api';
     process.env.JWT_AUDIENCE = 'replymentor-web';
     process.env.CORS_ORIGINS = 'http://localhost:3000';
+    process.env.SESSION_SUMMARY_PROCESSOR_ENABLED = 'false';
 
     jest.clearAllMocks();
     prisma = createPrismaMock();
@@ -305,7 +321,9 @@ describe('AppController (e2e)', () => {
         .expect(404);
       expect(response.body).toMatchObject({ statusCode: 404 });
       expect(JSON.stringify(response.body)).not.toContain(context.resumeText);
-      expect(JSON.stringify(response.body)).not.toContain(summary.content);
+      expect(JSON.stringify(response.body)).not.toContain(
+        summary.content.overview,
+      );
     }
     expect(ai.transcribeLiveChunk).not.toHaveBeenCalled();
     expect(ai.resolveGenerationTarget).not.toHaveBeenCalled();
@@ -410,6 +428,57 @@ describe('AppController (e2e)', () => {
         expect(typeof body.timestamp).toBe('string');
         expect(Number.isNaN(Date.parse(body.timestamp))).toBe(false);
       });
+  });
+
+  it('propagates valid request IDs and replaces invalid ones without cross-request leakage', async () => {
+    const supplied = '550e8400-e29b-41d4-a716-446655440000';
+    const [accepted, replaced, generated] = await Promise.all([
+      request(app.getHttpServer())
+        .get('/health/live')
+        .set('X-Request-ID', supplied),
+      request(app.getHttpServer())
+        .get('/health/live')
+        .set('X-Request-ID', 'private invalid value'),
+      request(app.getHttpServer()).get('/health/live'),
+    ]);
+    expect(accepted.status).toBe(200);
+    expect(accepted.headers['x-request-id']).toBe(supplied);
+    expect(replaced.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+    expect(replaced.headers['x-request-id']).not.toContain('private');
+    expect(generated.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+    expect(
+      new Set([
+        accepted.headers['x-request-id'],
+        replaced.headers['x-request-id'],
+        generated.headers['x-request-id'],
+      ]).size,
+    ).toBe(3);
+  });
+
+  it('keeps liveness independent and readiness dependent on PostgreSQL', async () => {
+    await request(app.getHttpServer())
+      .get('/health/live')
+      .expect(200)
+      .expect({ status: 'ok' });
+    expect(prisma.$queryRaw).not.toHaveBeenCalled();
+    await request(app.getHttpServer())
+      .get('/health/ready')
+      .expect(200)
+      .expect({ status: 'ok' });
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+
+    prisma.$queryRaw.mockRejectedValueOnce(
+      new Error('private database detail'),
+    );
+    const unavailable = await request(app.getHttpServer())
+      .get('/health/ready')
+      .expect(503);
+    expect(unavailable.body).toEqual({
+      statusCode: 503,
+      code: 'NOT_READY',
+      message: 'Serviço temporariamente indisponível.',
+    });
+    expect(JSON.stringify(unavailable.body)).not.toContain('private');
   });
 
   afterEach(async () => {

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { OperationalLogger } from '../../observability/operational-logger';
 import { QuestionDetectionConfig } from './question-detection.config';
 import {
   type DetectionAdapterOutcome,
@@ -32,9 +33,10 @@ function exactKeys(
 
 @Injectable()
 export class GeminiQuestionDetector implements LlmQuestionDetector {
-  private readonly logger = new Logger(GeminiQuestionDetector.name);
-
-  constructor(private readonly config: QuestionDetectionConfig) {}
+  constructor(
+    private readonly config: QuestionDetectionConfig,
+    @Optional() private readonly logger = new OperationalLogger(),
+  ) {}
 
   async detect(
     input: LlmQuestionDetectionInput,
@@ -134,7 +136,8 @@ export class GeminiQuestionDetector implements LlmQuestionDetector {
       outcome = adapterError.outcome;
       throw adapterError;
     } finally {
-      this.logger.log({
+      this.logger.info({
+        event: 'question_detection_provider',
         provider: 'gemini',
         model: this.config.model,
         outcome,

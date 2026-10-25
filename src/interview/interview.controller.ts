@@ -103,4 +103,15 @@ export class InterviewController {
       params.sessionId,
     );
   }
+
+  @Post('sessions/:sessionId/summary/retry')
+  retrySummary(
+    @Req() request: AuthenticatedRequest,
+    @Param() params: SessionParamsDto,
+  ) {
+    return this.interviewService.retrySummary(
+      request.user.userId,
+      params.sessionId,
+    );
+  }
 }

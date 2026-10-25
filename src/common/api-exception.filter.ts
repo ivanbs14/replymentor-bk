@@ -5,13 +5,13 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
   PayloadTooLargeException,
   ServiceUnavailableException,
   UnsupportedMediaTypeException,
   GatewayTimeoutException,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { OperationalLogger } from '../observability/operational-logger';
 
 export type ValidationIssue = { field: string; rule: string };
 
@@ -38,7 +38,7 @@ export function validationException(issues: ValidationIssue[]): HttpException {
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(ApiExceptionFilter.name);
+  constructor(private readonly logger = new OperationalLogger()) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();
@@ -94,11 +94,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
     };
     const fallback = defaults[status] ?? defaults[500];
     const hasExplicitContract = typeof safeBody.code === 'string';
-    if (!(exception instanceof HttpException) && status >= 500)
-      this.logger.error('Falha inesperada na API.');
+    const errorCode = hasExplicitContract
+      ? (safeBody.code as string)
+      : fallback.code;
+    if (status >= 500)
+      this.logger.error({
+        event: 'api_error',
+        outcome: 'error',
+        statusCode: status,
+        errorCode,
+      });
     response.status(status).json({
       statusCode: status,
-      code: hasExplicitContract ? (safeBody.code as string) : fallback.code,
+      code: errorCode,
       message:
         hasExplicitContract && typeof safeBody.message === 'string'
           ? safeBody.message

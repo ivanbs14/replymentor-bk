@@ -1,7 +1,6 @@
 import {
   BadGatewayException,
   GatewayTimeoutException,
-  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import type {
@@ -9,6 +8,7 @@ import type {
   LlmProvider,
 } from '../interview/interview.types';
 import { AiService } from './ai.service';
+import { OperationalLogger } from '../observability/operational-logger';
 
 describe.each<LlmProvider>(['gemini', 'openai', 'ollama'])(
   'AiService %s generation boundary',
@@ -80,7 +80,7 @@ describe.each<LlmProvider>(['gemini', 'openai', 'ollama'])(
       };
       global.fetch = jest.fn().mockRejectedValue(new Error('Unmocked request'));
       loggerError = jest
-        .spyOn(Logger.prototype, 'error')
+        .spyOn(OperationalLogger.prototype, 'error')
         .mockImplementation(() => undefined);
     });
 

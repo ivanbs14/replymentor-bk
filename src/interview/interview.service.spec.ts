@@ -100,7 +100,11 @@ function setupSession() {
         return Promise.resolve(response);
       }),
     },
-    sessionSummary: { findUnique: jest.fn(), create: jest.fn() },
+    sessionSummary: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
   };
   const prisma = {
     interviewContext: {
@@ -119,7 +123,7 @@ function setupSession() {
     },
     questionDetection: { findFirst: jest.fn() },
     suggestedResponse: { findFirst: jest.fn() },
-    sessionSummary: { findUnique: jest.fn() },
+    sessionSummary: { findUnique: jest.fn(), update: jest.fn() },
     $transaction: jest.fn((callback: (client: typeof tx) => unknown) =>
       callback(tx),
     ),
@@ -312,8 +316,15 @@ describe('InterviewService isolation', () => {
     const existingSummary = {
       id: 'summary-a',
       sessionId: 'session-a',
-      content: 'Existing summary',
-      topics: [],
+      status: 'READY',
+      content: { overview: 'Existing summary' },
+      fallbackContent: 'Fallback',
+      provider: 'gemini',
+      model: 'gemini-2.0-flash',
+      promptVersion: 'session-summary-v1',
+      startedAt: new Date('2026-01-01T00:00:00Z'),
+      completedAt: new Date('2026-01-01T00:00:01Z'),
+      errorCode: null,
     };
     const tx = {
       $queryRaw: jest.fn().mockResolvedValue([
@@ -341,11 +352,74 @@ describe('InterviewService isolation', () => {
       {} as HybridQuestionDetector,
     );
 
-    await expect(service.endSession('user-a', 'session-a')).resolves.toEqual(
-      existingSummary,
-    );
+    await expect(
+      service.endSession('user-a', 'session-a'),
+    ).resolves.toMatchObject({
+      id: 'summary-a',
+      status: 'READY',
+      content: { overview: 'Existing summary' },
+    });
     expect(tx.interviewSession.update).not.toHaveBeenCalled();
     expect(tx.sessionSummary.create).not.toHaveBeenCalled();
+  });
+
+  it('maps internal processing to pending in the public contract', async () => {
+    const { service, prisma } = setupSession();
+    prisma.sessionSummary.findUnique.mockResolvedValue({
+      id: 'summary-a',
+      sessionId: 'session-a',
+      status: 'PROCESSING',
+      content: null,
+      fallbackContent: 'Fallback',
+      provider: 'gemini',
+      model: 'model',
+      promptVersion: 'session-summary-v1',
+      startedAt: new Date(),
+      completedAt: null,
+      errorCode: null,
+    });
+    await expect(
+      service.getSummary('user-a', 'session-a'),
+    ).resolves.toMatchObject({
+      status: 'PENDING',
+      content: null,
+      fallbackContent: 'Fallback',
+    });
+  });
+
+  it('allows exactly one manual retry after failure', async () => {
+    const { service, prisma } = setupSession();
+    const failed = {
+      id: 'summary-a',
+      sessionId: 'session-a',
+      status: 'FAILED',
+      content: null,
+      fallbackContent: 'Fallback',
+      provider: 'gemini',
+      model: 'model',
+      promptVersion: 'session-summary-v1',
+      startedAt: new Date(),
+      completedAt: new Date(),
+      errorCode: 'PROVIDER_TIMEOUT',
+      manualRetryUsed: false,
+    };
+    prisma.sessionSummary.findUnique.mockResolvedValue(failed);
+    prisma.sessionSummary.update.mockResolvedValue({
+      ...failed,
+      status: 'PENDING',
+      manualRetryUsed: true,
+    });
+    await expect(
+      service.retrySummary('user-a', 'session-a'),
+    ).resolves.toMatchObject({
+      status: 'PENDING',
+      content: null,
+    });
+    const retryCall = JSON.stringify(prisma.sessionSummary.update.mock.calls);
+    expect(retryCall).toContain('"status":"FAILED"');
+    expect(retryCall).toContain('"manualRetryUsed":false');
+    expect(retryCall).toContain('"status":"PENDING"');
+    expect(retryCall).toContain('"manualRetryUsed":true');
   });
 
   it('rejects new transcripts for a closed session before calling STT', async () => {

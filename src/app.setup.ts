@@ -9,6 +9,7 @@ import {
   validationException,
   type ValidationIssue,
 } from './common/api-exception.filter';
+import { OperationalLogger } from './observability/operational-logger';
 
 function flattenValidationErrors(
   errors: ValidationError[],
@@ -38,6 +39,10 @@ export function configureApp(app: INestApplication) {
         validationException(flattenValidationErrors(errors)),
     }),
   );
-  app.useGlobalFilters(new ApiExceptionFilter());
-  app.enableCors({ credentials: true, origin: authConfig.allowedOrigins });
+  app.useGlobalFilters(new ApiExceptionFilter(app.get(OperationalLogger)));
+  app.enableCors({
+    credentials: true,
+    origin: authConfig.allowedOrigins,
+    exposedHeaders: ['X-Request-ID'],
+  });
 }

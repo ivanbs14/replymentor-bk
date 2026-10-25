@@ -30,6 +30,13 @@ enum QuestionDetectionSource {
   MANUAL
 }
 
+enum SessionSummaryStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
 model InterviewContext {
   id                 String             @id @default(cuid())
   userId             String
@@ -125,11 +132,25 @@ model SuggestedResponse {
 }
 
 model SessionSummary {
-  id        String           @id @default(cuid())
-  sessionId String           @unique
-  session   InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  content   String
-  topics    String[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id                    String               @id @default(cuid())
+  sessionId             String               @unique
+  session               InterviewSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  status                SessionSummaryStatus @default(PENDING)
+  content               Json?
+  fallbackContent       String
+  provider              String?
+  model                 String?
+  promptVersion         String               @default("session-summary-v1")
+  startedAt             DateTime?
+  claimedAt             DateTime?
+  providerCallStartedAt DateTime?
+  completedAt           DateTime?
+  errorCode             String?
+  attemptCount          Int                  @default(0)
+  manualRetryUsed       Boolean              @default(false)
+  evidenceResponseIds   String[]
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  @@index([status, claimedAt])
 }
