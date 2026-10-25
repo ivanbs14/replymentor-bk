@@ -271,10 +271,39 @@ type ReliabilityScenario = {
   configuredTimeoutMs?: number;
 };
 
-function omitChunks(item: Evaluation): Omit<Evaluation, 'chunks'> {
-  const copy: Partial<Evaluation> = { ...item };
-  delete copy.chunks;
-  return copy as Omit<Evaluation, 'chunks'>;
+type SanitizableEvaluation = Pick<
+  Evaluation,
+  | 'id'
+  | 'category'
+  | 'band'
+  | 'status'
+  | 'confidence'
+  | 'source'
+  | 'calls'
+  | 'correct'
+  | 'regression'
+> & {
+  timings: Timings & Record<string, unknown>;
+} & Record<string, unknown>;
+
+export function sanitizeEvaluation(item: SanitizableEvaluation) {
+  return {
+    id: item.id,
+    category: item.category,
+    band: item.band,
+    status: item.status,
+    confidence: item.confidence,
+    source: item.source,
+    calls: item.calls,
+    correct: item.correct,
+    regression: item.regression,
+    timings: {
+      simulatedExternalMs: item.timings.simulatedExternalMs,
+      localOverheadMs: item.timings.localOverheadMs,
+      fullDetectionMs: item.timings.fullDetectionMs,
+      simulatedCycleMs: item.timings.simulatedCycleMs,
+    },
+  };
 }
 
 function metrics(items: Evaluation[]) {
@@ -618,8 +647,8 @@ async function main() {
     passed: summary.passed,
     ambiguousResults: evaluations
       .filter((item) => item.band === 'ambiguous')
-      .map(omitChunks),
-    results: evaluations.map(omitChunks),
+      .map(sanitizeEvaluation),
+    results: evaluations.map(sanitizeEvaluation),
   };
   mkdirSync(resolve('generated'), { recursive: true });
   const outputPath = resolve('generated/feat-020-quality-gate.json');

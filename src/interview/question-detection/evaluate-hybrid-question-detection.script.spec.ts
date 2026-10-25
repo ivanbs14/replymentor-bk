@@ -1,4 +1,10 @@
-import { buildQualitySummary } from '../../../scripts/evaluate-hybrid-question-detection';
+import {
+  buildQualitySummary,
+  sanitizeEvaluation,
+} from '../../../scripts/evaluate-hybrid-question-detection';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const latency = {
   localOverheadMs: { samples: 2, p50Ms: 4, p95Ms: 8, maxMs: 8 },
@@ -72,5 +78,119 @@ describe('buildQualitySummary', () => {
 
     expect(summary.gates.noInventedQuestion).toBe(false);
     expect(summary.passed).toBe(false);
+  });
+});
+
+describe('FEAT-020 generated quality report', () => {
+  it('projects evaluations and nested timings through exact allowlists', () => {
+    const sanitized = sanitizeEvaluation({
+      id: 'safe-id',
+      category: 'safe-category',
+      band: 'ambiguous',
+      status: 'DETECTED',
+      approved: true,
+      confidence: 0.9,
+      source: 'LLM',
+      calls: 1,
+      correct: true,
+      regression: false,
+      timings: {
+        simulatedExternalMs: 10,
+        localOverheadMs: 2,
+        fullDetectionMs: 12,
+        simulatedCycleMs: 14,
+        token: 'TIMING_TOKEN_SENTINEL',
+        secret: 'TIMING_SECRET_SENTINEL',
+      },
+      chunks: [
+        { id: 'private', sequence: 1, content: 'CHUNK_CONTENT_SENTINEL' },
+      ],
+      expectedQuestion: 'EXPECTED_QUESTION_SENTINEL',
+      predictedQuestion: 'PREDICTED_QUESTION_SENTINEL',
+      evidence: [
+        {
+          chunkId: 'private',
+          sequence: 1,
+          excerpt: 'EVIDENCE_SENTINEL',
+        },
+      ],
+      prompt: 'PROMPT_SENTINEL',
+      responseBody: 'RESPONSE_BODY_SENTINEL',
+      credential: 'CREDENTIAL_SENTINEL',
+      extra: 'EXTRA_SENTINEL',
+    });
+
+    expect(Object.keys(sanitized).sort()).toEqual([
+      'band',
+      'calls',
+      'category',
+      'confidence',
+      'correct',
+      'id',
+      'regression',
+      'source',
+      'status',
+      'timings',
+    ]);
+    expect(Object.keys(sanitized.timings).sort()).toEqual([
+      'fullDetectionMs',
+      'localOverheadMs',
+      'simulatedCycleMs',
+      'simulatedExternalMs',
+    ]);
+    expect(JSON.stringify(sanitized)).not.toMatch(
+      /SENTINEL|chunks|question|prompt|responseBody|credential|evidence|token|secret/i,
+    );
+  });
+
+  it('serializes only sanitized evaluation metadata', () => {
+    execFileSync(
+      process.execPath,
+      [
+        '-r',
+        'ts-node/register/transpile-only',
+        'scripts/evaluate-hybrid-question-detection.ts',
+      ],
+      { cwd: resolve(__dirname, '../../..'), stdio: 'pipe' },
+    );
+
+    const report = JSON.parse(
+      readFileSync(
+        resolve(__dirname, '../../../generated/feat-020-quality-gate.json'),
+        'utf8',
+      ),
+    ) as {
+      ambiguousResults: Array<Record<string, unknown>>;
+      results: Array<Record<string, unknown>>;
+    };
+    const allowedEvaluationKeys = [
+      'band',
+      'calls',
+      'category',
+      'confidence',
+      'correct',
+      'id',
+      'regression',
+      'source',
+      'status',
+      'timings',
+    ];
+
+    for (const result of [...report.ambiguousResults, ...report.results]) {
+      expect(Object.keys(result).sort()).toEqual(allowedEvaluationKeys);
+      expect(
+        Object.keys(result.timings as Record<string, unknown>).sort(),
+      ).toEqual([
+        'fullDetectionMs',
+        'localOverheadMs',
+        'simulatedCycleMs',
+        'simulatedExternalMs',
+      ]);
+    }
+
+    const serializedReport = JSON.stringify(report);
+    expect(serializedReport).not.toMatch(
+      /"(?:chunks|expectedQuestion|predictedQuestion|question|prompt|responseBody|rawBody|body|content|excerpt|credential|apiKey|authorization|headers|evidence|token|secret)"\s*:/i,
+    );
   });
 });
