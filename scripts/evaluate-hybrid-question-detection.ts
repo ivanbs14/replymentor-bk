@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common';
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { arch, cpus, platform, release } from 'node:os';
-import { resolve } from 'node:path';
+import { extname, isAbsolute, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { detectLatestQuestion } from '../src/interview/question-detection/deterministic-question-detector';
 import { GeminiQuestionDetector } from '../src/interview/question-detection/gemini-question-detector';
@@ -304,6 +304,20 @@ export function sanitizeEvaluation(item: SanitizableEvaluation) {
       simulatedCycleMs: item.timings.simulatedCycleMs,
     },
   };
+}
+
+export function resolveQualityReportPath(
+  env: NodeJS.ProcessEnv = process.env,
+  cwd = process.cwd(),
+): string {
+  const productionPath = resolve(cwd, 'generated/feat-020-quality-gate.json');
+  const override = env.FEAT020_REPORT_PATH;
+  if (!override || env.NODE_ENV !== 'test') return productionPath;
+  assert.ok(
+    isAbsolute(override) && extname(override).toLowerCase() === '.json',
+    'FEAT020_REPORT_PATH must be an absolute .json path under NODE_ENV=test',
+  );
+  return resolve(override);
 }
 
 function metrics(items: Evaluation[]) {
@@ -651,7 +665,7 @@ async function main() {
     results: evaluations.map(sanitizeEvaluation),
   };
   mkdirSync(resolve('generated'), { recursive: true });
-  const outputPath = resolve('generated/feat-020-quality-gate.json');
+  const outputPath = resolveQualityReportPath();
   writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
   console.log(
     JSON.stringify(
