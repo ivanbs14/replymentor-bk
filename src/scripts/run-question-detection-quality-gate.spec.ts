@@ -255,9 +255,9 @@ describe('writeJsonAtomically', () => {
       'close',
       'unlink:/generated/summary.json.exclusive.tmp',
     ]);
-    expect(operations.some((operation) => operation.startsWith('rename:'))).toBe(
-      false,
-    );
+    expect(
+      operations.some((operation) => operation.startsWith('rename:')),
+    ).toBe(false);
   });
 });
 

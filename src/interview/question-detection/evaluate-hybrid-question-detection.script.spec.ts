@@ -45,8 +45,8 @@ describe('buildQualitySummary', () => {
         llmCallRate: 0.5,
       },
       latency: {
-        additionalDetectionP95Ms: expect.any(Number),
-        simulatedTotalCycleP95Ms: expect.any(Number),
+        additionalDetectionP95Ms: 8,
+        simulatedTotalCycleP95Ms: 30,
       },
       gates: {
         accuracy: true,

@@ -271,6 +271,12 @@ type ReliabilityScenario = {
   configuredTimeoutMs?: number;
 };
 
+function omitChunks(item: Evaluation): Omit<Evaluation, 'chunks'> {
+  const copy: Partial<Evaluation> = { ...item };
+  delete copy.chunks;
+  return copy as Omit<Evaluation, 'chunks'>;
+}
+
 function metrics(items: Evaluation[]) {
   const truePositive = items.filter(
     (item) => item.expectedQuestion !== null && item.predictedQuestion !== null,
@@ -532,7 +538,6 @@ async function main() {
     ambiguous[0],
     byId.get(ambiguous[0].id)!,
   );
-  const overall = metrics(evaluations);
   const byBand = Object.fromEntries(
     (['direct', 'ambiguous', 'notFound'] as const).map((band) => [
       band,
@@ -613,8 +618,8 @@ async function main() {
     passed: summary.passed,
     ambiguousResults: evaluations
       .filter((item) => item.band === 'ambiguous')
-      .map(({ chunks: _chunks, ...item }) => item),
-    results: evaluations.map(({ chunks: _chunks, ...item }) => item),
+      .map(omitChunks),
+    results: evaluations.map(omitChunks),
   };
   mkdirSync(resolve('generated'), { recursive: true });
   const outputPath = resolve('generated/feat-020-quality-gate.json');

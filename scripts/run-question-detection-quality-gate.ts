@@ -278,10 +278,7 @@ function main(): void {
   const backendCwd = resolve(__dirname, '..');
   const generatedDirectory = resolve(backendCwd, 'generated');
   mkdirSync(generatedDirectory, { recursive: true });
-  const reportPath = resolve(
-    generatedDirectory,
-    'feat-020-gate-summary.json',
-  );
+  const reportPath = resolve(generatedDirectory, 'feat-020-gate-summary.json');
   const summary = runAndPersistQualityGate({
     reportPath,
     createRunningSummary: () => createRunningQualityGateSummary(),

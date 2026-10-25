@@ -7,6 +7,10 @@ import {
 } from '../../../scripts/benchmark-remote-question-detection';
 import { detectLatestQuestion } from './deterministic-question-detector';
 import { QuestionDetectionAdapterError } from './llm-question-detector.types';
+import type {
+  LlmQuestionDetectionInput,
+  LlmQuestionDetector,
+} from './llm-question-detector.types';
 
 type TestCorpusCase = RemoteBenchmarkDependencies['corpus'][number];
 
@@ -76,8 +80,12 @@ describe('FEAT-020 remote question detection benchmark', () => {
     let active = 0;
     let maximumConcurrency = 0;
     const seenCandidates: number[] = [];
-    const detector: RemoteBenchmarkDependencies['detector'] = {
-      detect: jest.fn().mockImplementation(async (input) => {
+    const detectMock: jest.MockedFunction<LlmQuestionDetector['detect']> = jest
+      .fn<
+        ReturnType<LlmQuestionDetector['detect']>,
+        Parameters<LlmQuestionDetector['detect']>
+      >()
+      .mockImplementation(async (input: LlmQuestionDetectionInput) => {
         active += 1;
         maximumConcurrency = Math.max(maximumConcurrency, active);
         seenCandidates.push(input.deterministicConfidence);
@@ -92,15 +100,17 @@ describe('FEAT-020 remote question detection benchmark', () => {
           model: 'gemini-2.0-flash',
           adapterVersion: 'llm-v1',
         };
-      }),
+      });
+    const detector: RemoteBenchmarkDependencies['detector'] = {
+      detect: detectMock,
     };
 
     const report = await runRemoteBenchmark(dependencies({ detector }));
 
-    expect(detector.detect).toHaveBeenCalledTimes(REMOTE_CASE_IDS.length);
+    expect(detectMock).toHaveBeenCalledTimes(REMOTE_CASE_IDS.length);
     expect(maximumConcurrency).toBe(1);
     expect(
-      (detector.detect as jest.Mock).mock.calls.map(
+      detectMock.mock.calls.map(
         ([input]) => input.chunks[0].id.split('-chunk-')[0],
       ),
     ).toEqual(REMOTE_CASE_IDS);
@@ -128,15 +138,19 @@ describe('FEAT-020 remote question detection benchmark', () => {
   });
 
   it('excludes failures from latency and never meets the target with zero successes', async () => {
+    const detectMock: jest.MockedFunction<LlmQuestionDetector['detect']> = jest
+      .fn<
+        ReturnType<LlmQuestionDetector['detect']>,
+        Parameters<LlmQuestionDetector['detect']>
+      >()
+      .mockRejectedValue(new QuestionDetectionAdapterError('timeout'));
     const detector: RemoteBenchmarkDependencies['detector'] = {
-      detect: jest
-        .fn()
-        .mockRejectedValue(new QuestionDetectionAdapterError('timeout')),
+      detect: detectMock,
     };
 
     const report = await runRemoteBenchmark(dependencies({ detector }));
 
-    expect(detector.detect).toHaveBeenCalledTimes(REMOTE_CASE_IDS.length);
+    expect(detectMock).toHaveBeenCalledTimes(REMOTE_CASE_IDS.length);
     expect(report.successes).toBe(0);
     expect(report.failures).toBe(REMOTE_CASE_IDS.length);
     expect(report.outcomes).toEqual({ timeout: REMOTE_CASE_IDS.length });
