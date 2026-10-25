@@ -11,6 +11,7 @@
     "corpus:evaluate": "ts-node --transpile-only scripts/evaluate-question-detection.ts",
     "corpus:evaluate:hybrid": "ts-node --transpile-only scripts/evaluate-hybrid-question-detection.ts",
     "corpus:benchmark:remote": "ts-node --transpile-only scripts/benchmark-remote-question-detection.ts",
+    "quality:gate:question-detection": "ts-node --transpile-only scripts/run-question-detection-quality-gate.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "db:seed:interview-context": "npx ts-node --transpile-only prisma/seed-interview-context.ts",
     "db:test:up": "docker compose -f docker-compose.test.yml up -d --wait",
