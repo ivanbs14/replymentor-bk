@@ -11,6 +11,7 @@ import {
   REDIS_RATE_LIMIT_CLIENT,
 } from './rate-limit.tokens';
 import type { RateLimitStore } from './rate-limit.types';
+import { ProviderLeaseService } from './provider-lease.service';
 
 class TestRateLimitStore implements RateLimitStore {
   consume() {
@@ -79,12 +80,14 @@ class TestRateLimitStore implements RateLimitStore {
       inject: [RATE_LIMIT_CONFIG],
     },
     RateLimitGuard,
+    ProviderLeaseService,
   ],
   exports: [
     RATE_LIMIT_CONFIG,
     RATE_LIMIT_STORE,
     RateLimitKeyService,
     RateLimitGuard,
+    ProviderLeaseService,
   ],
 })
 export class RateLimitModule implements OnApplicationShutdown {

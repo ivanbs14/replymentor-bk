@@ -33,6 +33,7 @@ import { HybridQuestionDetector } from './question-detection/hybrid-question-det
 import { buildDeterministicSummary } from './session-summary';
 import { SESSION_SUMMARY_PROMPT_VERSION } from './session-summary.types';
 import { OperationalLogger } from '../observability/operational-logger';
+import { ProviderLeaseService } from '../rate-limit/provider-lease.service';
 
 type LockedSession = {
   id: string;
@@ -48,12 +49,20 @@ export class InterviewService {
     2_000;
   private readonly sessionTransactionTimeoutMs =
     this.generationTransactionTimeoutMs * 2 + 2_000;
+  private readonly sttLeaseTtlMs =
+    (Number(process.env.STT_TIMEOUT_MS ?? '60000') || 60_000) + 5_000;
+  private readonly generationLeaseTtlMs =
+    Math.max(
+      Number(process.env.LLM_TIMEOUT_MS ?? '45000') || 45_000,
+      Number(process.env.QUESTION_DETECTION_TIMEOUT_MS ?? '1500') || 1_500,
+    ) + 5_000;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly ai: AiService,
     private readonly hybridQuestionDetector: HybridQuestionDetector,
     @Optional() private readonly logger = new OperationalLogger(),
+    @Optional() private readonly providerLeases?: ProviderLeaseService,
   ) {}
 
   async createContext(userId: string, payload: CreateInterviewContextDto) {
@@ -173,11 +182,21 @@ export class InterviewService {
     }
     this.assertActive(session.status);
 
-    const transcript = await this.ai.transcribeLiveChunk({
-      transcript: payload.transcript,
-      audioBase64: payload.audioBase64,
-      mimeType: payload.mimeType,
-    });
+    const transcribe = () =>
+      this.ai.transcribeLiveChunk({
+        transcript: payload.transcript,
+        audioBase64: payload.audioBase64,
+        mimeType: payload.mimeType,
+      });
+    const transcript = payload.audioBase64
+      ? await this.withProviderLease(
+          'stt',
+          userId,
+          sessionId,
+          this.sttLeaseTtlMs,
+          transcribe,
+        )
+      : await transcribe();
 
     return this.prisma.$transaction(
       async (tx) => {
@@ -369,9 +388,16 @@ export class InterviewService {
               provider: null,
               model: null,
             }
-          : await this.hybridQuestionDetector.detect(
-              chunks,
-              detectLatestQuestion(chunks),
+          : await this.withProviderLease(
+              'generation',
+              input.userId,
+              input.sessionId,
+              this.generationLeaseTtlMs,
+              () =>
+                this.hybridQuestionDetector.detect(
+                  chunks,
+                  detectLatestQuestion(chunks),
+                ),
             );
         const stillActive = await this.lockOwnedSession(
           tx,
@@ -462,20 +488,27 @@ export class InterviewService {
           take: this.maxChunksForGeneration,
         });
         const detectedQuestion = detection.question!;
-        const generated = await this.ai.generateSuggestedAnswer({
-          context: {
-            ...input.context,
-            companySegment: input.context.companySegment ?? undefined,
-            aiBehavior: input.context.aiBehavior ?? undefined,
-          },
-          detectedQuestion,
-          transcriptWindow: [...chunks]
-            .reverse()
-            .map(({ content }) => content)
-            .join('\n'),
-          provider: input.target.provider,
-          model: input.target.model,
-        });
+        const generated = await this.withProviderLease(
+          'generation',
+          input.userId,
+          input.sessionId,
+          this.generationLeaseTtlMs,
+          () =>
+            this.ai.generateSuggestedAnswer({
+              context: {
+                ...input.context,
+                companySegment: input.context.companySegment ?? undefined,
+                aiBehavior: input.context.aiBehavior ?? undefined,
+              },
+              detectedQuestion,
+              transcriptWindow: [...chunks]
+                .reverse()
+                .map(({ content }) => content)
+                .join('\n'),
+              provider: input.target.provider,
+              model: input.target.model,
+            }),
+        );
         const response = await tx.suggestedResponse.create({
           data: {
             sessionId: input.sessionId,
@@ -506,6 +539,17 @@ export class InterviewService {
     await tx.$queryRaw(Prisma.sql`
       SELECT pg_advisory_xact_lock(hashtextextended(${phaseKey}, 0))::text AS "lock"
     `);
+  }
+
+  private withProviderLease<T>(
+    kind: 'stt' | 'generation',
+    userId: string,
+    sessionId: string,
+    ttlMs: number,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    if (!this.providerLeases) return work();
+    return this.providerLeases.run({ kind, userId, sessionId, ttlMs }, work);
   }
 
   async endSession(userId: string, sessionId: string) {
