@@ -17,6 +17,7 @@ import {
   StartSessionDto,
 } from './dto/interview.dto';
 import { assertIdempotencyKey } from './idempotency';
+import { RateLimitPolicy } from '../rate-limit/rate-limit.decorator';
 
 type AuthenticatedRequest = Request & {
   user: { userId: string; email: string };
@@ -26,6 +27,11 @@ type AuthenticatedRequest = Request & {
 export class InterviewController {
   constructor(private readonly interviewService: InterviewService) {}
 
+  @RateLimitPolicy({
+    group: 'context_write',
+    identity: 'user',
+    failMode: 'closed',
+  })
   @Post('context')
   createContext(
     @Req() request: AuthenticatedRequest,
@@ -34,16 +40,31 @@ export class InterviewController {
     return this.interviewService.createContext(request.user.userId, payload);
   }
 
+  @RateLimitPolicy({
+    group: 'read_default',
+    identity: 'user',
+    failMode: 'open',
+  })
   @Get('context/latest')
   getLatestContext(@Req() request: AuthenticatedRequest) {
     return this.interviewService.getLatestContext(request.user.userId);
   }
 
+  @RateLimitPolicy({
+    group: 'read_default',
+    identity: 'user',
+    failMode: 'open',
+  })
   @Get('contexts')
   listContexts(@Req() request: AuthenticatedRequest) {
     return this.interviewService.listContexts(request.user.userId);
   }
 
+  @RateLimitPolicy({
+    group: 'session_start',
+    identity: 'user',
+    failMode: 'closed',
+  })
   @Post('sessions/start')
   startSession(
     @Req() request: AuthenticatedRequest,
@@ -52,6 +73,20 @@ export class InterviewController {
     return this.interviewService.startSession(request.user.userId, payload);
   }
 
+  @RateLimitPolicy(
+    {
+      group: 'transcript_text',
+      identity: 'user-session',
+      failMode: 'closed',
+      when: 'text',
+    },
+    {
+      group: 'transcript_audio',
+      identity: 'user-session',
+      failMode: 'closed',
+      when: 'audio',
+    },
+  )
   @Post('sessions/:sessionId/transcripts')
   addTranscript(
     @Req() request: AuthenticatedRequest,
@@ -67,6 +102,11 @@ export class InterviewController {
     );
   }
 
+  @RateLimitPolicy({
+    group: 'generate_response',
+    identity: 'user-session',
+    failMode: 'closed',
+  })
   @Post('sessions/:sessionId/generate-response')
   generateResponse(
     @Req() request: AuthenticatedRequest,
@@ -82,6 +122,11 @@ export class InterviewController {
     );
   }
 
+  @RateLimitPolicy({
+    group: 'session_end',
+    identity: 'user-session',
+    failMode: 'closed',
+  })
   @Post('sessions/:sessionId/end')
   endSession(
     @Req() request: AuthenticatedRequest,
@@ -93,6 +138,11 @@ export class InterviewController {
     );
   }
 
+  @RateLimitPolicy({
+    group: 'summary_read',
+    identity: 'user-session',
+    failMode: 'open',
+  })
   @Get('sessions/:sessionId/summary')
   getSummary(
     @Req() request: AuthenticatedRequest,
@@ -104,6 +154,11 @@ export class InterviewController {
     );
   }
 
+  @RateLimitPolicy({
+    group: 'summary_retry',
+    identity: 'user-session',
+    failMode: 'closed',
+  })
   @Post('sessions/:sessionId/summary/retry')
   retrySummary(
     @Req() request: AuthenticatedRequest,

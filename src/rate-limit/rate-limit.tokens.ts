@@ -1,0 +1,3 @@
+export const RATE_LIMIT_CONFIG = Symbol('RATE_LIMIT_CONFIG');
+export const RATE_LIMIT_STORE = Symbol('RATE_LIMIT_STORE');
+export const REDIS_RATE_LIMIT_CLIENT = Symbol('REDIS_RATE_LIMIT_CLIENT');

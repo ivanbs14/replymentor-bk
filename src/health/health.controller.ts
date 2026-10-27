@@ -2,6 +2,7 @@ import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
 import { PrismaService } from '../prisma.service';
 import { OperationalLogger } from '../observability/operational-logger';
+import { RateLimitPolicy } from '../rate-limit/rate-limit.decorator';
 
 const READY_TIMEOUT_MS = 1_000;
 
@@ -13,12 +14,14 @@ export class HealthController {
   ) {}
 
   @Public()
+  @RateLimitPolicy({ group: 'health', identity: 'ip', failMode: 'open' })
   @Get('live')
   live() {
     return { status: 'ok' };
   }
 
   @Public()
+  @RateLimitPolicy({ group: 'health', identity: 'ip', failMode: 'open' })
   @Get('ready')
   async ready() {
     const started = performance.now();

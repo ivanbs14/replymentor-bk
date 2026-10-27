@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { AUTH_COOKIE_NAME, AuthConfigService } from './auth-config.service';
 import { AuthDto } from './dto/auth.dto';
 import { Public } from './public.decorator';
+import { RateLimitPolicy } from '../rate-limit/rate-limit.decorator';
 
 type AuthenticatedRequest = Request & {
   user: { userId: string; email: string };
@@ -17,6 +18,11 @@ export class AuthController {
   ) {}
 
   @Public()
+  @RateLimitPolicy({
+    group: 'auth_register_ip',
+    identity: 'ip',
+    failMode: 'closed',
+  })
   @Post('register')
   async register(
     @Body() payload: AuthDto,
@@ -28,6 +34,10 @@ export class AuthController {
   }
 
   @Public()
+  @RateLimitPolicy(
+    { group: 'auth_login_ip', identity: 'ip', failMode: 'closed' },
+    { group: 'auth_login_account', identity: 'account', failMode: 'closed' },
+  )
   @Post('login')
   async login(
     @Body() payload: AuthDto,
@@ -39,6 +49,11 @@ export class AuthController {
   }
 
   @Public()
+  @RateLimitPolicy({
+    group: 'auth_logout',
+    identity: 'user',
+    failMode: 'closed',
+  })
   @Post('logout')
   logout(@Res({ passthrough: true }) response: Response) {
     response.clearCookie(
@@ -48,6 +63,11 @@ export class AuthController {
     return { success: true };
   }
 
+  @RateLimitPolicy({
+    group: 'read_default',
+    identity: 'user',
+    failMode: 'open',
+  })
   @Get('me')
   me(@Req() request: AuthenticatedRequest) {
     return this.authService.me(request.user.userId);

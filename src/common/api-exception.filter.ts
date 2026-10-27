@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { OperationalLogger } from '../observability/operational-logger';
+import { getCorrelationId } from '../observability/request-context';
 
 export type ValidationIssue = { field: string; rule: string };
 
@@ -78,6 +79,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
         code: 'UNSUPPORTED_MEDIA_TYPE',
         message: 'Tipo de mídia não permitido.',
       },
+      429: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Muitas solicitações. Tente novamente mais tarde.',
+      },
       502: {
         code: 'PROVIDER_BAD_RESPONSE',
         message: 'O provedor retornou uma resposta inválida.',
@@ -104,6 +109,14 @@ export class ApiExceptionFilter implements ExceptionFilter {
         statusCode: status,
         errorCode,
       });
+    const retryAfterSeconds =
+      Number.isSafeInteger(safeBody.retryAfterSeconds) &&
+      (safeBody.retryAfterSeconds as number) >= 0
+        ? (safeBody.retryAfterSeconds as number)
+        : undefined;
+    const requestId = errorCode.startsWith('RATE_LIMIT_')
+      ? getCorrelationId()
+      : undefined;
     response.status(status).json({
       statusCode: status,
       code: errorCode,
@@ -112,6 +125,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
           ? safeBody.message
           : fallback.message,
       ...(Array.isArray(safeBody.errors) ? { errors: safeBody.errors } : {}),
+      ...(retryAfterSeconds !== undefined ? { retryAfterSeconds } : {}),
+      ...(requestId ? { requestId } : {}),
     });
   }
 }

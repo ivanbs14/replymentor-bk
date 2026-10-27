@@ -10,6 +10,8 @@ import {
   type ValidationIssue,
 } from './common/api-exception.filter';
 import { OperationalLogger } from './observability/operational-logger';
+import { RATE_LIMIT_CONFIG } from './rate-limit/rate-limit.tokens';
+import type { RateLimitConfig } from './rate-limit/rate-limit.config';
 
 function flattenValidationErrors(
   errors: ValidationError[],
@@ -26,6 +28,11 @@ function flattenValidationErrors(
 
 export function configureApp(app: INestApplication) {
   const authConfig = app.get(AuthConfigService);
+  const rateLimitConfig = app.get<RateLimitConfig>(RATE_LIMIT_CONFIG);
+  const express = app.getHttpAdapter().getInstance() as {
+    set(name: string, value: number): void;
+  };
+  express.set('trust proxy', rateLimitConfig.trustProxyHops);
   app.use(cookieParser());
   app.use(json({ limit: JSON_BODY_LIMIT }));
   app.use(urlencoded({ extended: true, limit: URL_ENCODED_BODY_LIMIT }));
@@ -43,6 +50,12 @@ export function configureApp(app: INestApplication) {
   app.enableCors({
     credentials: true,
     origin: authConfig.allowedOrigins,
-    exposedHeaders: ['X-Request-ID'],
+    exposedHeaders: [
+      'X-Request-ID',
+      'Retry-After',
+      'RateLimit-Limit',
+      'RateLimit-Remaining',
+      'RateLimit-Reset',
+    ],
   });
 }

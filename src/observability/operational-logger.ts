@@ -15,6 +15,8 @@ export type OperationalEvent = {
   model?: string;
   errorCode?: string;
   detectorVersion?: string;
+  policyGroup?: string;
+  retryBucket?: string;
   count?: number;
   size?: number;
   [key: string]: unknown;
@@ -32,6 +34,8 @@ const EVENT_FIELDS = new Set([
   'model',
   'errorCode',
   'detectorVersion',
+  'policyGroup',
+  'retryBucket',
   'count',
   'size',
 ]);

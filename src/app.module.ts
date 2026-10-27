@@ -21,9 +21,11 @@ import { HealthController } from './health/health.controller';
 import { OperationalLogger } from './observability/operational-logger';
 import { RequestContextMiddleware } from './observability/request-context.middleware';
 import { HttpObservabilityInterceptor } from './observability/http-observability.interceptor';
+import { RateLimitModule } from './rate-limit/rate-limit.module';
+import { RateLimitGuard } from './rate-limit/rate-limit.guard';
 
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [JwtModule.register({}), RateLimitModule],
   controllers: [
     AppController,
     InterviewController,
@@ -81,6 +83,10 @@ import { HttpObservabilityInterceptor } from './observability/http-observability
     {
       provide: APP_GUARD,
       useClass: OriginGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useExisting: RateLimitGuard,
     },
     {
       provide: APP_INTERCEPTOR,
