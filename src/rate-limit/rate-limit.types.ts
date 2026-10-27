@@ -35,3 +35,10 @@ export interface RateLimitStore {
   acquireLease(key: string, token: string, ttlMs: number): Promise<boolean>;
   releaseLease(key: string, token: string): Promise<void>;
 }
+
+export class RateLimitStoreUnavailableError extends Error {
+  constructor() {
+    super('Rate limit store unavailable.');
+    this.name = 'RateLimitStoreUnavailableError';
+  }
+}

@@ -28,7 +28,8 @@
     "test:cov:domain": "jest --config ./test/jest-critical.json --coverage --runInBand --no-watchman",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json --no-watchman test/app.e2e-spec.ts",
-    "test:session:integration": "bash scripts/test-session-integration.sh"
+    "test:session:integration": "bash scripts/test-session-integration.sh",
+    "test:rate-limit:integration": "bash scripts/test-rate-limit-redis-integration.sh"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
