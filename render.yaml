@@ -1,0 +1,69 @@
+services:
+  - type: keyvalue
+    name: replymentor-redis
+    plan: free
+    region: virginia
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: replymentor-api
+    runtime: node
+    plan: free
+    region: virginia
+    buildCommand: npm ci && npx prisma generate && npm run build && npx prisma migrate deploy
+    startCommand: npm run start:prod
+    healthCheckPath: /health/ready
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.14.1
+      - key: DEPLOY_PROVIDER
+        value: render
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: replymentor-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: RATE_LIMIT_KEY_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: replymentor-api
+      - key: JWT_AUDIENCE
+        value: replymentor-web
+      - key: CORS_ORIGINS
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: GEMINI_ALLOWED_MODELS
+        value: gemini-2.0-flash
+      - key: QUESTION_DETECTION_MODEL
+        value: gemini-2.0-flash
+      - key: QUESTION_DETECTION_TIMEOUT_MS
+        value: "1500"
+      - key: QUESTION_DETECTION_ALLOWED_MODELS
+        value: gemini-2.0-flash
+      - key: LLM_TIMEOUT_MS
+        value: "90000"
+      - key: WHISPER_BASE_URL
+        sync: false
+      - key: WHISPER_API_KEY
+        sync: false
+      - key: WHISPER_MODEL
+        value: Systran/faster-whisper-large-v3
+      - key: STT_TIMEOUT_MS
+        value: "60000"
