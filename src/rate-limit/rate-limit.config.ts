@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import type { ClientIpSource } from './client-ip.resolver';
 import { DEFAULT_RATE_LIMIT_POLICIES } from './rate-limit.policies';
 import type { RateLimitGroup, RateLimitRule } from './rate-limit.types';
 
@@ -64,6 +65,7 @@ export class RateLimitConfig {
   private constructor(
     readonly redisUrl: string | null,
     readonly keySecret: string,
+    readonly clientIpSource: ClientIpSource,
     readonly trustProxyHops: number,
     readonly redisRequired: boolean,
     readonly policies: Policies,
@@ -112,13 +114,29 @@ export class RateLimitConfig {
       );
     }
 
+    const rawProvider = env.DEPLOY_PROVIDER;
+    if (rawProvider !== undefined && rawProvider !== 'render') {
+      throw new Error('DEPLOY_PROVIDER inválido.');
+    }
+    const clientIpSource: ClientIpSource =
+      rawProvider === 'render' ? 'render' : 'express';
+
     const rawHops = env.TRUST_PROXY_HOPS?.trim();
     const trustProxyHops =
-      rawHops === undefined && isLocal ? 0 : Number(rawHops);
+      clientIpSource === 'render'
+        ? 0
+        : rawHops === undefined && isLocal
+          ? 0
+          : Number(rawHops);
     if (
-      (rawHops !== undefined && !/^\d+$/.test(rawHops)) ||
+      (clientIpSource === 'render' &&
+        rawHops !== undefined &&
+        rawHops !== '0') ||
+      (clientIpSource === 'express' &&
+        rawHops !== undefined &&
+        !/^\d+$/.test(rawHops)) ||
       !Number.isSafeInteger(trustProxyHops) ||
-      trustProxyHops < (isLocal ? 0 : 1)
+      trustProxyHops < (isLocal || clientIpSource === 'render' ? 0 : 1)
     ) {
       throw new Error(
         'TRUST_PROXY_HOPS deve ser um inteiro válido para o ambiente.',
@@ -128,6 +146,7 @@ export class RateLimitConfig {
     return new RateLimitConfig(
       redisUrl,
       keySecret,
+      clientIpSource,
       trustProxyHops,
       redisRequired,
       parsePolicies(env.RATE_LIMITS_JSON),

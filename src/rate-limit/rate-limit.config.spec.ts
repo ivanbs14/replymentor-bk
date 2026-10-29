@@ -98,6 +98,25 @@ describe('RateLimitConfig', () => {
     });
   });
 
+  it('selects Render IP handling without trusting X-Forwarded-For hops', () => {
+    const config = RateLimitConfig.fromEnv({
+      ...production,
+      DEPLOY_PROVIDER: 'render',
+      TRUST_PROXY_HOPS: undefined,
+    });
+    expect(config.clientIpSource).toBe('render');
+    expect(config.trustProxyHops).toBe(0);
+  });
+
+  it.each(['railway', 'unknown', ' render '])(
+    'rejects unsupported deploy provider %s',
+    (DEPLOY_PROVIDER) => {
+      expect(() =>
+        RateLimitConfig.fromEnv({ ...production, DEPLOY_PROVIDER }),
+      ).toThrow('DEPLOY_PROVIDER inválido.');
+    },
+  );
+
   it.each(['preview', 'staging', 'production'])(
     'requires secret and hops in %s',
     (NODE_ENV) => {
