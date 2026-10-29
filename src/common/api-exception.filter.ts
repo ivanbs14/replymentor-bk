@@ -117,6 +117,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const requestId = errorCode.startsWith('RATE_LIMIT_')
       ? getCorrelationId()
       : undefined;
+    if (
+      errorCode === 'RATE_LIMIT_CONCURRENT_OPERATION' &&
+      retryAfterSeconds !== undefined
+    ) {
+      const resetEpochSeconds =
+        Math.ceil(Date.now() / 1000) + retryAfterSeconds;
+      response.setHeader('Retry-After', retryAfterSeconds);
+      response.setHeader('RateLimit-Limit', 1);
+      response.setHeader('RateLimit-Remaining', 0);
+      response.setHeader('RateLimit-Reset', resetEpochSeconds);
+    }
     response.status(status).json({
       statusCode: status,
       code: errorCode,

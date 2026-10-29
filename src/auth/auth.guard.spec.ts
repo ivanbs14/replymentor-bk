@@ -69,6 +69,25 @@ describe('AuthGuard', () => {
     });
   });
 
+  it('populates an optional user on public routes without rejecting invalid cookies', () => {
+    reflector.getAllAndOverride.mockReturnValue(true);
+    const guard = new AuthGuard(
+      reflector as unknown as Reflector,
+      jwtService,
+      config,
+    );
+    const authenticated = context({ [AUTH_COOKIE_NAME]: token() });
+    const anonymous = context({ [AUTH_COOKIE_NAME]: 'invalid-cookie' });
+
+    expect(guard.canActivate(authenticated.executionContext)).toBe(true);
+    expect(authenticated.request.user).toEqual({
+      userId: 'user-1',
+      email: 'user@example.com',
+    });
+    expect(guard.canActivate(anonymous.executionContext)).toBe(true);
+    expect(anonymous.request.user).toBeUndefined();
+  });
+
   it('rejects missing and invalid cookies', () => {
     const guard = new AuthGuard(
       reflector as unknown as Reflector,

@@ -29,10 +29,6 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) {
-      return true;
-    }
-
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const cookies = request.cookies as unknown;
     const token =
@@ -40,6 +36,7 @@ export class AuthGuard implements CanActivate {
         ? (cookies as Record<string, unknown>)[AUTH_COOKIE_NAME]
         : undefined;
     if (typeof token !== 'string' || !token) {
+      if (isPublic) return true;
       throw new UnauthorizedException('Token não informado.');
     }
 
@@ -50,9 +47,11 @@ export class AuthGuard implements CanActivate {
         secret: this.authConfig.secret,
       });
     } catch {
+      if (isPublic) return true;
       throw new UnauthorizedException('Token inválido ou expirado.');
     }
     if (typeof payload.sub !== 'string' || typeof payload.email !== 'string') {
+      if (isPublic) return true;
       throw new UnauthorizedException('Token inválido ou expirado.');
     }
     if (
@@ -62,6 +61,7 @@ export class AuthGuard implements CanActivate {
       !Number.isFinite(payload.exp) ||
       payload.exp <= payload.iat
     ) {
+      if (isPublic) return true;
       throw new UnauthorizedException('Token inválido ou expirado.');
     }
     request.user = {

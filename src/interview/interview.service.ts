@@ -52,10 +52,9 @@ export class InterviewService {
   private readonly sttLeaseTtlMs =
     (Number(process.env.STT_TIMEOUT_MS ?? '60000') || 60_000) + 5_000;
   private readonly generationLeaseTtlMs =
-    Math.max(
-      Number(process.env.LLM_TIMEOUT_MS ?? '45000') || 45_000,
-      Number(process.env.QUESTION_DETECTION_TIMEOUT_MS ?? '1500') || 1_500,
-    ) + 5_000;
+    (Number(process.env.LLM_TIMEOUT_MS ?? '45000') || 45_000) +
+    (Number(process.env.QUESTION_DETECTION_TIMEOUT_MS ?? '1500') || 1_500) +
+    10_000;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -306,27 +305,35 @@ export class InterviewService {
       this.assertActive(session.status);
     }
 
-    const detection =
-      existing ??
-      (await this.detectAndPersist({
-        userId,
-        sessionId,
-        forceQuestion: payload.forceQuestion?.trim(),
-        idempotencyKey,
-        requestFingerprint,
-      }));
-    if (!this.isDetectionApproved(detection)) {
-      return this.toGenerationResult(detection);
-    }
-    return this.generateAndPersist({
+    return this.withProviderLease(
+      'generation',
       userId,
       sessionId,
-      detectionId: detection.id,
-      idempotencyKey,
-      requestFingerprint,
-      context: session.context,
-      target,
-    });
+      this.generationLeaseTtlMs,
+      async () => {
+        const detection =
+          existing ??
+          (await this.detectAndPersist({
+            userId,
+            sessionId,
+            forceQuestion: payload.forceQuestion?.trim(),
+            idempotencyKey,
+            requestFingerprint,
+          }));
+        if (!this.isDetectionApproved(detection)) {
+          return this.toGenerationResult(detection);
+        }
+        return this.generateAndPersist({
+          userId,
+          sessionId,
+          detectionId: detection.id,
+          idempotencyKey,
+          requestFingerprint,
+          context: session.context,
+          target,
+        });
+      },
+    );
   }
 
   private async detectAndPersist(input: {
@@ -388,16 +395,9 @@ export class InterviewService {
               provider: null,
               model: null,
             }
-          : await this.withProviderLease(
-              'generation',
-              input.userId,
-              input.sessionId,
-              this.generationLeaseTtlMs,
-              () =>
-                this.hybridQuestionDetector.detect(
-                  chunks,
-                  detectLatestQuestion(chunks),
-                ),
+          : await this.hybridQuestionDetector.detect(
+              chunks,
+              detectLatestQuestion(chunks),
             );
         const stillActive = await this.lockOwnedSession(
           tx,
@@ -488,27 +488,20 @@ export class InterviewService {
           take: this.maxChunksForGeneration,
         });
         const detectedQuestion = detection.question!;
-        const generated = await this.withProviderLease(
-          'generation',
-          input.userId,
-          input.sessionId,
-          this.generationLeaseTtlMs,
-          () =>
-            this.ai.generateSuggestedAnswer({
-              context: {
-                ...input.context,
-                companySegment: input.context.companySegment ?? undefined,
-                aiBehavior: input.context.aiBehavior ?? undefined,
-              },
-              detectedQuestion,
-              transcriptWindow: [...chunks]
-                .reverse()
-                .map(({ content }) => content)
-                .join('\n'),
-              provider: input.target.provider,
-              model: input.target.model,
-            }),
-        );
+        const generated = await this.ai.generateSuggestedAnswer({
+          context: {
+            ...input.context,
+            companySegment: input.context.companySegment ?? undefined,
+            aiBehavior: input.context.aiBehavior ?? undefined,
+          },
+          detectedQuestion,
+          transcriptWindow: [...chunks]
+            .reverse()
+            .map(({ content }) => content)
+            .join('\n'),
+          provider: input.target.provider,
+          model: input.target.model,
+        });
         const response = await tx.suggestedResponse.create({
           data: {
             sessionId: input.sessionId,

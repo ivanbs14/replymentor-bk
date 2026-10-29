@@ -2,6 +2,6 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "..",
   "testEnvironment": "node",
-  "testMatch": ["<rootDir>/test/rate-limit-redis.integration-spec.ts"],
+  "testMatch": ["<rootDir>/test/rate-limit-*.integration-spec.ts"],
   "transform": { "^.+\\.(t|j)s$": "ts-jest" }
 }

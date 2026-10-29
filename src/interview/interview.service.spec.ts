@@ -8,6 +8,8 @@ import type {
   DeterministicQuestionDetectionResult,
   QuestionDetectionInputChunk,
 } from './question-detection/deterministic-question-detector';
+import type { ProviderLeaseService } from '../rate-limit/provider-lease.service';
+import { RateLimitExceededException } from '../rate-limit/rate-limit.exception';
 
 const idempotencyKey = '550e8400-e29b-41d4-a716-446655440000';
 const context = {
@@ -24,7 +26,7 @@ const context = {
   aiBehavior: null,
 };
 
-function setupSession() {
+function setupSession(providerLeases?: ProviderLeaseService) {
   const session = {
     id: 'session-a',
     status: 'ACTIVE',
@@ -163,11 +165,31 @@ function setupSession() {
       prisma as unknown as PrismaService,
       ai as unknown as AiService,
       hybrid as unknown as HybridQuestionDetector,
+      undefined,
+      providerLeases,
     ),
   };
 }
 
 describe('InterviewService isolation', () => {
+  it('rejects a concurrent generation before opening a transaction or calling AI', async () => {
+    const runLease = jest
+      .fn()
+      .mockRejectedValue(
+        new RateLimitExceededException('RATE_LIMIT_CONCURRENT_OPERATION', 2),
+      );
+    const providerLeases = { run: runLease } as unknown as ProviderLeaseService;
+    const { service, prisma, ai, hybrid } = setupSession(providerLeases);
+
+    await expect(
+      service.generateResponse('user-a', 'session-a', {}, idempotencyKey),
+    ).rejects.toBeInstanceOf(RateLimitExceededException);
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(hybrid.detect).not.toHaveBeenCalled();
+    expect(ai.generateSuggestedAnswer).not.toHaveBeenCalled();
+  });
+
   it('creates a context owned by the authenticated user', async () => {
     const { service, prisma } = setupSession();
     const payload = {
