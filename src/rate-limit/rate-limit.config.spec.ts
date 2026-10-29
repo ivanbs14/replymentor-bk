@@ -108,7 +108,7 @@ describe('RateLimitConfig', () => {
     expect(config.trustProxyHops).toBe(0);
   });
 
-  it.each(['railway', 'unknown', ' render '])(
+  it.each(['', 'railway', 'unknown', ' render '])(
     'rejects unsupported deploy provider %s',
     (DEPLOY_PROVIDER) => {
       expect(() =>
