@@ -17,6 +17,7 @@ import type { App } from 'supertest/types';
 import { ApiExceptionFilter } from '../src/common/api-exception.filter';
 import { OperationalLogger } from '../src/observability/operational-logger';
 import { RequestContextMiddleware } from '../src/observability/request-context.middleware';
+import { ClientIpResolver } from '../src/rate-limit/client-ip.resolver';
 import { RateLimitConfig } from '../src/rate-limit/rate-limit.config';
 import { RateLimitPolicy } from '../src/rate-limit/rate-limit.decorator';
 import { RateLimitExceededException } from '../src/rate-limit/rate-limit.exception';
@@ -127,6 +128,10 @@ describeWithRedis('Rate limiting distributed HTTP contract', () => {
         {
           provide: RateLimitKeyService,
           useValue: new RateLimitKeyService(keySecret, environment),
+        },
+        {
+          provide: ClientIpResolver,
+          useValue: new ClientIpResolver(config.clientIpSource),
         },
         RateLimitGuard,
         { provide: APP_GUARD, useExisting: RateLimitGuard },

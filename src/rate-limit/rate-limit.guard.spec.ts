@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { OperationalLogger } from '../observability/operational-logger';
+import { ClientIpResolver } from './client-ip.resolver';
 import { RateLimitConfig } from './rate-limit.config';
 import type { RateLimitBinding } from './rate-limit.decorator';
 import {
@@ -32,6 +33,9 @@ describe('RateLimitGuard', () => {
     consume?: jest.MockedFunction<RateLimitStore['consume']>;
     body?: Record<string, unknown>;
     user?: { userId: string; email: string };
+    headers?: Record<string, string | string[] | undefined>;
+    ip?: string;
+    configEnv?: Record<string, string | undefined>;
   }) {
     const consume =
       options?.consume ??
@@ -54,7 +58,8 @@ describe('RateLimitGuard', () => {
     const response = { setHeader: jest.fn() };
     const request = {
       body: options?.body ?? {},
-      ip: '203.0.113.9',
+      headers: options?.headers ?? {},
+      ip: options?.ip ?? '203.0.113.9',
       method: 'POST',
       params: { sessionId: 'session-a' },
       socket: {},
@@ -72,6 +77,7 @@ describe('RateLimitGuard', () => {
       NODE_ENV: 'test',
       RATE_LIMIT_KEY_SECRET: 's'.repeat(32),
       TRUST_PROXY_HOPS: '0',
+      ...options?.configEnv,
     });
     const loggerWarn = jest.fn();
     const loggerError = jest.fn();
@@ -79,14 +85,24 @@ describe('RateLimitGuard', () => {
       warn: loggerWarn,
       error: loggerError,
     } as unknown as OperationalLogger;
+    const keys = new RateLimitKeyService('s'.repeat(32), 'test');
     const guard = new RateLimitGuard(
       reflector,
       config,
       store,
-      new RateLimitKeyService('s'.repeat(32), 'test'),
+      keys,
+      new ClientIpResolver(config.clientIpSource),
       logger,
     );
-    return { consume, context, guard, loggerError, loggerWarn, response };
+    return {
+      consume,
+      context,
+      guard,
+      keys,
+      loggerError,
+      loggerWarn,
+      response,
+    };
   }
 
   it('allows unconfigured routes without touching the store', async () => {
@@ -109,6 +125,48 @@ describe('RateLimitGuard', () => {
       'RateLimit-Remaining',
       9,
     );
+  });
+
+  it('ignores spoofed X-Forwarded-For and uses the Render header', async () => {
+    const fixture = setup({
+      headers: {
+        'cf-connecting-ip': '203.0.113.10',
+        'x-forwarded-for': '198.51.100.44',
+      },
+      configEnv: { DEPLOY_PROVIDER: 'render', TRUST_PROXY_HOPS: undefined },
+    });
+    await fixture.guard.canActivate(fixture.context);
+    const key = fixture.consume.mock.calls[0][0];
+    expect(key).toBe(`auth_login_ip:${fixture.keys.forIp('203.0.113.10')}`);
+    expect(key).not.toBe(
+      `auth_login_ip:${fixture.keys.forIp('198.51.100.44')}`,
+    );
+  });
+
+  it('fails closed before Redis when the Render client IP is missing', async () => {
+    const fixture = setup({
+      headers: {},
+      configEnv: { DEPLOY_PROVIDER: 'render', TRUST_PROXY_HOPS: undefined },
+    });
+    await expect(
+      fixture.guard.canActivate(fixture.context),
+    ).rejects.toBeInstanceOf(RateLimitStoreUnavailableException);
+    expect(fixture.consume).not.toHaveBeenCalled();
+    expect(fixture.loggerError).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'rate_limit_identity_unavailable' }),
+    );
+  });
+
+  it('fails open without Redis access for an open IP policy with no Render IP', async () => {
+    const fixture = setup({
+      selected: [{ group: 'health', identity: 'ip', failMode: 'open' }],
+      headers: {},
+      configEnv: { DEPLOY_PROVIDER: 'render', TRUST_PROXY_HOPS: undefined },
+    });
+    await expect(fixture.guard.canActivate(fixture.context)).resolves.toBe(
+      true,
+    );
+    expect(fixture.consume).not.toHaveBeenCalled();
   });
 
   it('rejects exhausted policies with standard headers and sanitized logging', async () => {

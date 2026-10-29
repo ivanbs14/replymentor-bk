@@ -1,6 +1,7 @@
 import { Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 import { OperationalLogger } from '../observability/operational-logger';
+import { ClientIpResolver } from './client-ip.resolver';
 import { RateLimitConfig } from './rate-limit.config';
 import { RateLimitGuard } from './rate-limit.guard';
 import { RateLimitKeyService } from './rate-limit-key.service';
@@ -77,6 +78,12 @@ class TestRateLimitStore implements RateLimitStore {
           config.keySecret,
           process.env.NODE_ENV ?? 'development',
         ),
+      inject: [RATE_LIMIT_CONFIG],
+    },
+    {
+      provide: ClientIpResolver,
+      useFactory: (config: RateLimitConfig) =>
+        new ClientIpResolver(config.clientIpSource),
       inject: [RATE_LIMIT_CONFIG],
     },
     RateLimitGuard,

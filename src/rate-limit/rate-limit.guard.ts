@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { OperationalLogger } from '../observability/operational-logger';
+import { ClientIpResolver } from './client-ip.resolver';
 import { RateLimitConfig } from './rate-limit.config';
 import {
   RATE_LIMIT_POLICY_KEY,
@@ -36,6 +37,7 @@ export class RateLimitGuard implements CanActivate {
     @Inject(RATE_LIMIT_CONFIG) private readonly config: RateLimitConfig,
     @Inject(RATE_LIMIT_STORE) private readonly store: RateLimitStore,
     private readonly keys: RateLimitKeyService,
+    private readonly clientIp: ClientIpResolver,
     private readonly logger: OperationalLogger,
   ) {}
 
@@ -52,9 +54,25 @@ export class RateLimitGuard implements CanActivate {
 
     for (const binding of bindings) {
       if (!this.matchesPayload(binding, request)) continue;
+      const identity = this.resolveIdentity(binding, request);
+      if (identity === null) {
+        this.logger.error({
+          event: 'rate_limit_identity_unavailable',
+          outcome: binding.failMode,
+          statusCode: binding.failMode === 'closed' ? 503 : 200,
+          errorCode: 'RATE_LIMIT_IDENTITY_UNAVAILABLE',
+          method: request.method,
+          route: binding.group,
+          policyGroup: binding.group,
+        });
+        if (binding.failMode === 'closed') {
+          throw new RateLimitStoreUnavailableException();
+        }
+        continue;
+      }
       try {
         const decision = await this.store.consume(
-          `${binding.group}:${this.resolveIdentity(binding, request)}`,
+          `${binding.group}:${identity}`,
           this.config.policies[binding.group],
         );
         if (!selected || this.isMoreRestrictive(decision, selected)) {
@@ -113,12 +131,12 @@ export class RateLimitGuard implements CanActivate {
   private resolveIdentity(
     binding: RateLimitBinding,
     request: RateLimitedRequest,
-  ): string {
+  ): string | null {
     switch (binding.identity) {
-      case 'ip':
-        return this.keys.forIp(
-          request.ip || request.socket.remoteAddress || 'unknown',
-        );
+      case 'ip': {
+        const ip = this.clientIp.resolve(request);
+        return ip === null ? null : this.keys.forIp(ip);
+      }
       case 'account': {
         const body: unknown = request.body;
         const email =
@@ -130,16 +148,15 @@ export class RateLimitGuard implements CanActivate {
         return this.keys.forAccount(email);
       }
       case 'user':
-        return request.user
-          ? this.keys.forUser(request.user.userId)
-          : this.keys.forIp(
-              request.ip || request.socket.remoteAddress || 'unknown',
-            );
+        if (request.user) return this.keys.forUser(request.user.userId);
+        {
+          const ip = this.clientIp.resolve(request);
+          return ip === null ? null : this.keys.forIp(ip);
+        }
       case 'user-session': {
         if (!request.user) {
-          return this.keys.forIp(
-            request.ip || request.socket.remoteAddress || 'unknown',
-          );
+          const ip = this.clientIp.resolve(request);
+          return ip === null ? null : this.keys.forIp(ip);
         }
         const rawSessionId = request.params?.sessionId;
         const sessionId =
